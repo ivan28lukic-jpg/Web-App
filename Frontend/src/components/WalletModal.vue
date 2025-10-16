@@ -17,6 +17,7 @@
         >
           <template #left>💼</template>
         </Input>
+        lalalalalala
 
         <!-- CURRENCY & BALANCE (samo kod CREATE) -->
         <div v-if="!isEdit" class="form__row form__row--2">

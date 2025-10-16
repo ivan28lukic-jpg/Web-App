@@ -1,6 +1,6 @@
 <script setup>
 import { reactive, watch, computed, ref, onMounted } from "vue";
-import { getSavingsWallets } from "@/services/wallets";
+import { getSavingsWallets } from "@/services/serviceWallets";
 
 const props = defineProps({
   initial: { type: Object, default: null }, // null => create

@@ -90,7 +90,7 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import { useWalletsStore } from "@/stores/wallets";
+import { useWalletsStore } from "@/stores/storeWallets";
 import { useToast } from "@/composables/useToast";
 import WalletModal from "@/components/WalletModal.vue";
 import ConfirmDialog from "@/components/ConfirmDialog.vue";

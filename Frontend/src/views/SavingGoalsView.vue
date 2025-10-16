@@ -1,37 +1,85 @@
 <script setup>
 import { ref, watch, onMounted } from "vue";
-import { useSavingGoalsStore } from "@/stores/savingGoals";
+import { useSavingGoalsStore } from "@/stores/storesSavingGoals";
 import BaseModal from "@/components/BaseModal.vue";
 import SavingGoalForm from "@/components/SavingGoalForm.vue";
 import SavingGoalTable from "@/components/SavingGoalTable.vue";
 import GoalTransferForm from "@/components/GoalTransferForm.vue";
 import SavingGoalProgressChart from "@/components/SavingGoalProgressChart.vue";
-import "@/assets/categories-look.css";  // ⬅ isti izgled kao Categories
+import "@/assets/categories-look.css"; // ⬅ isti izgled kao Categories
+import { useWalletsStore } from "@/stores/storeWallets";
 
 const store = useSavingGoalsStore();
-const q = ref(""); watch(q, v => store.search = v);
+const q = ref("");
+watch(q, v => (store.search = v));
 
-const showEdit = ref(false), showTransfer = ref(false), showProgress = ref(false);
-const editGoal = ref(null); const transferMode = ref("contribute");
+const showEdit = ref(false);
+const showTransfer = ref(false);
+const showProgress = ref(false);
+const editGoal = ref(null);
+const transferMode = ref("contribute");
+const walletsStore = useWalletsStore();
 
-function openCreate(){ editGoal.value=null; showEdit.value=true; }
-function openEdit(g){ editGoal.value={...g}; showEdit.value=true; }
-function closeEdit(){ showEdit.value=false; editGoal.value=null; }
-async function submitEdit(payload){ if (editGoal.value?.id) await store.edit(editGoal.value.id, payload); else await store.add(payload); closeEdit(); }
+function openCreate() {
+  editGoal.value = null;
+  showEdit.value = true;
+}
+function openEdit(g) {
+  editGoal.value = { ...g };
+  showEdit.value = true;
+}
+function closeEdit() {
+  showEdit.value = false;
+  editGoal.value = null;
+}
+async function submitEdit(payload) {
+  if (editGoal.value?.id) await store.edit(editGoal.value.id, payload);
+  else await store.add(payload);
+  closeEdit();
+}
 
-function openContrib(g){ transferMode.value="contribute"; editGoal.value={...g}; showTransfer.value=true; }
-function openWithdraw(g){ transferMode.value="withdraw";  editGoal.value={...g}; showTransfer.value=true; }
-function closeTransfer(){ showTransfer.value=false; editGoal.value=null; }
-async function submitTransfer(payload){ try{ if (!editGoal.value?.id) return;
-  if (transferMode.value==="contribute") await store.contribute(editGoal.value.id, payload);
-  else await store.withdraw(editGoal.value.id, payload);
-  closeTransfer(); } catch(e){ alert(e.message); } }
+async function openContrib(goal) {
+  transferMode.value = "contribute";
+  editGoal.value = { ...goal };
+  await walletsStore.fetchForOwner(goal.ownerId); // ← OVO JE KLJUČNO
+  showTransfer.value = true;
+}
+async function openWithdraw(goal) {
+  transferMode.value = "withdraw";
+  editGoal.value = { ...goal };
+  await walletsStore.fetchForOwner(goal.ownerId); // ← OVO JE KLJUČNO
+  showTransfer.value = true;
+}
+function closeTransfer() {
+  showTransfer.value = false;
+  editGoal.value = null;
+}
+async function submitTransfer(payload) {
+  try {
+    if (!editGoal.value?.id) return;
+    if (transferMode.value === "contribute")
+      await store.contribute(editGoal.value.id, payload);
+    else await store.withdraw(editGoal.value.id, payload);
+    closeTransfer();
+  } catch (e) {
+    alert(e.message);
+  }
+}
 
-async function openProgress(g){ editGoal.value={...g}; await store.loadProgress(g.id,{}); showProgress.value=true; }
-function closeProgress(){ showProgress.value=false; editGoal.value=null; }
-async function onDelete(g){ if (confirm(`Delete goal "${g.name}"?`)) await store.remove(g.id); }
+async function openProgress(g) {
+  editGoal.value = { ...g };
+  await store.loadProgress(g.id, {});
+  showProgress.value = true;
+}
+function closeProgress() {
+  showProgress.value = false;
+  editGoal.value = null;
+}
+async function onDelete(g) {
+  if (confirm(`Delete goal "${g.name}"?`)) await store.remove(g.id);
+}
 
-onMounted(()=>store.load());
+onMounted(() => store.load());
 </script>
 
 <template>

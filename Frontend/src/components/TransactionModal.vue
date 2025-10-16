@@ -67,7 +67,7 @@
 import { computed, reactive, ref, watch } from "vue";
 import Input from "@/components/Input.vue";
 import Select from "@/components/Select.vue";
-import { useWalletsStore } from "@/stores/wallets";
+import { useWalletsStore } from "@/stores/storeWallets";
 import { useCategoriesStore } from "@/stores/categories"; // ako nemaš još, privremeno napravi prost store ili zameni options ručno
 
 const props = defineProps({

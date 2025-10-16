@@ -60,6 +60,15 @@ public class SavingGoalController {
                 .toList();
     }
 
+    // ADMIN list
+    @GetMapping
+    public List<SavingGoalResponse> all(@RequestParam(defaultValue = "false") boolean includeArchived) {
+        return goals.findAll().stream()
+                .filter(g -> includeArchived || !g.isArchived())
+                .map(this::toResponse)
+                .toList();
+    }
+
     // GET by id
     @GetMapping("/{id}")
     public ResponseEntity<SavingGoalResponse> byId(@PathVariable Long id) {

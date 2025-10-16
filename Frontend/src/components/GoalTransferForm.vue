@@ -1,28 +1,45 @@
 <script setup>
-import { reactive, ref, onMounted, computed } from "vue";
-import { listWalletsByOwner } from "@/services/wallets";
+import { reactive, ref, watch, computed } from "vue";
+import { listWalletsByOwner } from "@/services/serviceWallets";
 
 const props = defineProps({
   mode: { type: String, required: true },     // "contribute" | "withdraw"
-  ownerId: { type: Number, required: true },
-  goal: { type: Object, required: true },
+  ownerId: { type: Number, required: true },  // ID korisnika koji inicira, ali NE koristi se za prikaz wallets
+  goal: { type: Object, required: true },     // goal.ownerId je pravi vlasnik cilja
 });
-const emit = defineEmits(["submit","cancel"]);
+const emit = defineEmits(["submit", "cancel"]);
 
-const state = reactive({ amount:"", selectedWalletId:"" });
-const wallets = ref([]); const loading = ref(false); const error = ref(null);
+const state = reactive({ amount: "", selectedWalletId: "" });
+const wallets = ref([]);
+const loading = ref(false);
+const error = ref(null);
 
-onMounted(async () => {
-  try { loading.value = true;
-    const { data } = await listWalletsByOwner(props.ownerId);
+// Učitaj novčanike vlasnika cilja (goal.ownerId), ne trenutnog usera
+async function loadWalletsForGoalOwner() {
+  if (!props.goal?.ownerId) {
+    wallets.value = [];
+    return;
+  }
+  try {
+    loading.value = true;
+    const { data } = await listWalletsByOwner(props.goal.ownerId);
     wallets.value = Array.isArray(data) ? data : (data?.content ?? []);
-  } catch(e){ error.value = e?.response?.data?.message || e.message; }
-  finally{ loading.value = false; }
-});
+  } catch (e) {
+    error.value = e?.response?.data?.message || e.message;
+  } finally {
+    loading.value = false;
+  }
+}
 
-const goalWalletId  = computed(()=> props.goal?.walletId ?? props.goal?.wallet?.id ?? null);
-const goalCurrency  = computed(()=> props.goal?.wallet?.currencyCode || props.goal?.walletCurrencyCode || "");
-const goalAvailable = computed(()=> Number(props.goal?.currentAmount ?? 0));
+watch(
+  () => props.goal?.ownerId,
+  () => { loadWalletsForGoalOwner(); },
+  { immediate: true }
+);
+
+const goalWalletId  = computed(() => props.goal?.walletId ?? props.goal?.wallet?.id ?? null);
+const goalCurrency  = computed(() => props.goal?.wallet?.currencyCode || props.goal?.walletCurrencyCode || "");
+const goalAvailable = computed(() => Number(props.goal?.currentAmount ?? 0));
 
 const filteredWallets = computed(() => {
   if (!goalWalletId.value) return wallets.value;
@@ -31,33 +48,31 @@ const filteredWallets = computed(() => {
 const selectedWallet = computed(() =>
   filteredWallets.value.find(w => String(w.id) === String(state.selectedWalletId))
 );
-function wCur(w){ return w?.currencyCode || w?.currency || ""; }
-function wBal(w){
+function wCur(w) { return w?.currencyCode || w?.currency || ""; }
+function wBal(w) {
   const c = [w?.balance, w?.availableBalance, w?.amount, w?.currentAmount];
   const v = c.find(x => x != null);
   return Number(v ?? NaN);
 }
-const selCur = computed(()=> wCur(selectedWallet.value));
-const selBal = computed(()=> wBal(selectedWallet.value));
+const selCur = computed(() => wCur(selectedWallet.value));
+const selBal = computed(() => wBal(selectedWallet.value));
 
-//function normAmt(x){ const n = Number(String(x).replace(",",".")); return Number.isFinite(n) ? n.toFixed(2) : null; }
+function toNumber2dp(x) {
+  const n = Number(String(x).replace(",", "."));
+  if (!Number.isFinite(n)) return null;
+  return Number(n.toFixed(2));
+}
 
-function valid(){
+function valid() {
   const a = toNumber2dp(state.amount);
   if (!a || !state.selectedWalletId) return false;
-  if (props.mode === "contribute"){
+  if (props.mode === "contribute") {
     const b = selBal.value;
     if (Number.isFinite(b) && Number(a) > b) return false;
   } else {
     if (Number(a) > goalAvailable.value) return false;
   }
   return true;
-}
-
-function toNumber2dp(x) {
-  const n = Number(String(x).replace(",", "."));
-  if (!Number.isFinite(n)) return null;
-  return Number(n.toFixed(2));
 }
 
 function submit() {
@@ -68,10 +83,8 @@ function submit() {
   if (props.mode === "contribute") payload.fromWalletId = Number(state.selectedWalletId);
   else payload.toWalletId = Number(state.selectedWalletId);
 
-  // NOTE: do not attach description/occurredAt if empty — services.clean() will also strip them
   emit("submit", payload);
 }
-
 </script>
 
 <template>

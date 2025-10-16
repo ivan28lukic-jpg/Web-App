@@ -9,7 +9,7 @@
         <div style="display:flex; gap:8px; align-items:center;">
           <select v-model="filters.walletId" class="form__control" style="width:160px;">
             <option value="">All wallets</option>
-            <option v-for="w in wallets.items" :key="w.id" :value="String(w.id)">{{ w.name }}</option>
+            <option v-for="w in walletOpts" :key="w.value" :value="w.value">{{ w.label }}</option>
           </select>
           <select v-model="filters.type" class="form__control" style="width:140px;">
             <option value="">All types</option>
@@ -90,6 +90,7 @@ import { ref, onMounted, computed } from "vue";
 import { useWalletsStore } from "@/stores/storeWallets";
 import { useTransactionsStore } from "@/stores/transactions";
 import { useCategoriesStore } from "@/stores/storeCategories";
+import { useAuthStore } from "@/stores/auth"; // DODATO
 import { useToast } from "@/composables/useToast";
 import TransactionModal from "@/components/TransactionModal.vue";
 import ConfirmDialog from "@/components/ConfirmDialog.vue";
@@ -98,6 +99,7 @@ const toast = useToast();
 const wallets = useWalletsStore();
 const txs = useTransactionsStore();
 const categories = useCategoriesStore?.();
+const auth = useAuthStore();
 
 const modalOpen = ref(false);
 const current = ref(null);
@@ -107,17 +109,26 @@ let toDeleteId = null;
 
 const filters = txs.filters;
 
+// Filtriraj wallet-e: admin vidi sve, user samo svoje
+const isAdmin = computed(() => auth.user?.role === "ADMIN");
+const walletOpts = computed(() =>
+  isAdmin.value
+    ? wallets.items.map(w => ({ value: String(w.id), label: w.name }))
+    : auth.user
+      ? wallets.items.filter(w => w.ownerId == auth.user.id)
+                    .map(w => ({ value: String(w.id), label: w.name }))
+      : []
+);
+
 function fmt(n) {
   const v = Number(n || 0);
   return v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 function dateOf(t) {
-  // 1) pokušaj najčešćih ključeva
   const candidates = [
     "date", "executedAt", "occurredAt", "transactionDate",
     "createdAt", "updatedAt", "time", "timestamp", "happenedAt", "valueDate"
   ];
-
   let raw = null;
   for (const k of candidates) {
     if (t && t[k] != null && String(t[k]).length > 0) {
@@ -125,32 +136,19 @@ function dateOf(t) {
       break;
     }
   }
-
   if (!raw) return "—";
-
-  // 2) ako je broj -> epoch (sekunde ili milisekunde)
   if (typeof raw === "number") {
-    const ms = raw > 1e12 ? raw : raw * 1000; // heuristika: 13 cifara = ms, 10 = sec
+    const ms = raw > 1e12 ? raw : raw * 1000;
     return new Date(ms).toLocaleString();
   }
-
-  // 3) ako je string ISO/SQL
-  // pokušaj “YYYY-MM-DD” ili ISO sa vremenom
   const s = String(raw);
-
-  // samo datum
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
     return new Date(s + "T00:00:00").toLocaleDateString();
   }
-
-  // ISO sa vremenom (npr. 2025-10-13T18:42:11Z)
   const dt = new Date(s);
   if (!isNaN(dt.getTime())) {
-    // prikaži i vreme da bude korisnije
-    return dt.toLocaleString();     //ako hocemo samo datum -> toLocaleDateString()
+    return dt.toLocaleString();
   }
-
-  // fallback (nepoznat format)
   return s;
 }
 
@@ -227,25 +225,21 @@ onMounted(async () => {
     border-collapse: collapse;
     border-spacing: 0;
 }
-
 .wf__table thead th {
     font-weight: 600;
     color: var(--muted);
     padding: 10px 12px;
     border-bottom: 1px solid rgba(255,255,255,0.08);
 }
-
 .wf__table tbody td {
     padding: 10px 12px;
     border-bottom: 1px solid rgba(255,255,255,0.06);
 }
-
 .wf__actions {
     display: flex;
     gap: 6px;
     justify-content: flex-end;
 }
-
 .muted {
     color: var(--muted);
 }

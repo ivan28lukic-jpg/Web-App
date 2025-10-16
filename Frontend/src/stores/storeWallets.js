@@ -10,6 +10,7 @@ import {
 } from "@/services/serviceWallets";
 import { getCurrencies } from "@/services/meta";
 import { useToast } from "@/composables/useToast";
+import { useAuthStore } from "@/stores/auth";
 
 export const useWalletsStore = defineStore("wallets", {
   state: () => ({
@@ -25,6 +26,11 @@ export const useWalletsStore = defineStore("wallets", {
   getters: {
     active: (s) => s.items.filter((w) => !w.archived),
     archived: (s) => s.items.filter((w) => !!w.archived),
+    mine: (s) => {
+      const auth = useAuthStore();
+      const userId = auth.user?.id;
+      return s.items.filter((w) => w.ownerId === userId);
+    },
   },
 
   actions: {
@@ -59,6 +65,14 @@ export const useWalletsStore = defineStore("wallets", {
       }
     },
 
+    async fetchMine() {
+      const auth = useAuthStore();
+      const userId = auth.user?.id;
+      if (userId) {
+        await this.fetch({ ownerId: userId });
+      }
+    },
+
     async fetchForOwner(ownerId) {
       // Wrapper za jasnoću
       return this.fetch({ ownerId });
@@ -78,7 +92,7 @@ export const useWalletsStore = defineStore("wallets", {
             ? undefined
             : Number(String(payload.balance).replace(",", "."));
         await createWallet({ ...payload, balance });
-        await this.fetch();
+        await this.fetchMine();
         toast.success("Wallet created");
       } catch (e) {
         const msg = e?.response?.data?.message || "Create failed";
@@ -95,7 +109,7 @@ export const useWalletsStore = defineStore("wallets", {
             ? undefined
             : Number(String(payload.balance).replace(",", "."));
         await updateWallet(id, { ...payload, balance });
-        await this.fetch();
+        await this.fetchMine();
         toast.success("Wallet updated");
       } catch (e) {
         const msg = e?.response?.data?.message || "Update failed";
@@ -113,7 +127,7 @@ export const useWalletsStore = defineStore("wallets", {
           w = data;
         }
         await archiveWalletFull(id, w, archived);
-        await this.fetch();
+        await this.fetchMine();
         toast.success(archived ? "Wallet archived" : "Wallet restored");
       } catch (e) {
         const msg = e?.response?.data?.message || "Archive toggle failed";
@@ -126,7 +140,7 @@ export const useWalletsStore = defineStore("wallets", {
       const toast = useToast();
       try {
         await deleteWallet(id);
-        await this.fetch();
+        await this.fetchMine();
         toast.success("Wallet deleted");
       } catch (e) {
         const msg = e?.response?.data?.message || "Delete failed";

@@ -68,16 +68,18 @@ import { computed, reactive, ref, watch } from "vue";
 import Input from "@/components/Input.vue";
 import Select from "@/components/Select.vue";
 import { useWalletsStore } from "@/stores/storeWallets";
-import { useCategoriesStore } from "@/stores/storeCategories"; // ako nemaš još, privremeno napravi prost store ili zameni options ručno
+import { useCategoriesStore } from "@/stores/storeCategories";
+import { useAuthStore } from "@/stores/auth";
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
-  tx: { type: Object, default: null }, // transaction za edit
+  tx: { type: Object, default: null }
 });
 const emit = defineEmits(["update:modelValue", "save", "closed"]);
 
 const wallets = useWalletsStore();
-const categories = useCategoriesStore?.() ?? { items: [] }; // fallback ako store ne postoji
+const categories = useCategoriesStore?.() ?? { items: [] };
+const auth = useAuthStore();
 
 const loading = ref(false);
 const isEdit = computed(() => !!props.tx);
@@ -102,8 +104,15 @@ const typeOpts = [
   { value: "EXPENSE", label: "Expense" },
 ];
 
+// ** FILTRIRAJ WALLETE **
+const isAdmin = computed(() => auth.user?.role === "ADMIN");
 const walletOpts = computed(() =>
-  wallets.items.map((w) => ({ value: String(w.id), label: w.name }))
+  isAdmin.value
+    ? wallets.items.map(w => ({ value: String(w.id), label: w.name }))
+    : auth.user
+      ? wallets.items.filter(w => w.ownerId == auth.user.id)
+                    .map(w => ({ value: String(w.id), label: w.name }))
+      : []
 );
 
 const categoryOpts = computed(() =>
@@ -151,7 +160,7 @@ async function submit() {
       amount: Number(normalize(form.amount)),
       categoryId: form.categoryId ? Number(form.categoryId) : undefined,
       description: form.description || undefined,
-      date: form.date || undefined, // backend može ignorisati ako generiše sam
+      date: form.date || undefined,
     };
     emit("save", payload);
   } finally {
@@ -175,21 +184,17 @@ function close() {
     z-index: 9997;
     padding: 16px;
 }
-
 .tm__card {
     width: 100%;
     max-width: 900px;
 }
-
 .tm__title {
     margin: 0 0 6px 0;
 }
-
 .tm__subtitle {
     margin: 0 0 12px 0;
     color: var(--muted);
 }
-
 .tm__actions {
     display: flex;
     gap: 12px;

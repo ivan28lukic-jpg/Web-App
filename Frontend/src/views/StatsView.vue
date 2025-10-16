@@ -1,7 +1,7 @@
 <template>
     <section>
       <h1>Statistika prihoda i troškova</h1>
-      <components-stats :owner-id="userId" />
+    <components-stats :owner-id="ownerId" />
     </section>
   </template>
   

@@ -5,7 +5,7 @@ export const useAuthStore = defineStore("auth", {
   state: () => ({
     token: localStorage.getItem("jwt") || null,
     role: localStorage.getItem("role") || null, // "USER" | "ADMIN"
-    user: null, // opciono: me endpoint
+    user: JSON.parse(localStorage.getItem("user")) || null, // <-- dodato za automatski reload
   }),
   getters: {
     isAuthenticated: (s) => !!s.token,
@@ -19,7 +19,7 @@ export const useAuthStore = defineStore("auth", {
       this.role = data.role;
       localStorage.setItem("jwt", data.token);
       localStorage.setItem("role", data.role);
-      // opciono: this.fetchMe();
+      await this.fetchMe(); // <-- bitno, odmah pokupi user-a
     },
     logout() {
       this.token = null;
@@ -27,10 +27,12 @@ export const useAuthStore = defineStore("auth", {
       this.user = null;
       localStorage.removeItem("jwt");
       localStorage.removeItem("role");
+      localStorage.removeItem("user");
     },
     async fetchMe() {
       const { data } = await api.get("/users/me");
       this.user = data;
+      localStorage.setItem("user", JSON.stringify(data)); // <-- zapamti user i u localStorage
     },
   },
 });

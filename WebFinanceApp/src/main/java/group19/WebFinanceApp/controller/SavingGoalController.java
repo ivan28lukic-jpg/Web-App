@@ -29,7 +29,7 @@ import java.time.*;   // <-- za LocalDate, ZoneOffset
 import java.util.Comparator;
 
 @RestController
-@RequestMapping("/api/saving-goals")
+    @RequestMapping("/api/saving-goals")
 public class SavingGoalController {
 
     private final SavingGoalRepository goals;
@@ -49,7 +49,14 @@ public class SavingGoalController {
         this.transferService = transferService;
         this.transactions = transactions;
     }
-
+    // LIST ALL (admin only)
+    @GetMapping
+    public List<SavingGoalResponse> all(@RequestParam(defaultValue = "false") boolean includeArchived) {
+        return goals.findAll().stream()
+                .filter(g -> includeArchived || !g.isArchived())
+                .map(this::toResponse)
+                .toList();
+    }
     // LIST by owner (includeArchived=false podrazumevano)
     @GetMapping("/owner/{ownerId}")
     public List<SavingGoalResponse> byOwner(@PathVariable Long ownerId,

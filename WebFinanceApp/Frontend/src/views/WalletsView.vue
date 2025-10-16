@@ -184,10 +184,15 @@ async function doDelete() {
     toDeleteId = null;
   }
 }
-
 onMounted(async () => {
-  await wallets.ensureCurrencies();
-  await reload();
+  await auth.fetchMe(); // obavezno!
+  if (userRole.value === "ADMIN") {
+    await wallets.fetchAll();
+    await goals.fetchAll();
+  } else {
+    await wallets.fetch({ ownerId: userId.value });
+    await goals.fetchAll(userId.value);
+  }
 });
 </script>
 

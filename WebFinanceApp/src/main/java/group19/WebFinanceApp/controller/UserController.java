@@ -12,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
+import org.springframework.security.core.Authentication;
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -39,7 +39,16 @@ public class UserController {
                 .map(u -> ResponseEntity.ok(toResponse(u)))
                 .orElseGet(() -> ResponseEntity.notFound().<UserResponse>build());
     }
-
+    @GetMapping("/me")
+    public ResponseEntity<UserResponse> me(Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        // Username je subject iz tokena
+        return users.findByUsername(authentication.getName())
+                .map(u -> ResponseEntity.ok(toResponse(u)))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
     @PostMapping
     public ResponseEntity<UserResponse> create(@Valid @RequestBody UserCreateRequest in) {
         if (users.existsByUsername(in.getUsername()) || users.existsByEmail(in.getEmail())) {

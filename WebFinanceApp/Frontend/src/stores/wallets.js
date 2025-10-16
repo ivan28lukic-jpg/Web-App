@@ -27,11 +27,13 @@ export const useWalletsStore = defineStore("wallets", {
   },
 
   actions: {
-    async fetch({ search = "", page = 0, size = 100 } = {}) {
+    async fetch({ search = "", page = 0, size = 100, ownerId } = {}) {
       this.loading = true;
       this.error = "";
       try {
-        const { data } = await listWallets({ search, page, size });
+        const params = { search, page, size };
+        if (ownerId) params.ownerId = ownerId;
+        const { data } = await listWallets(params);
         if (Array.isArray(data)) {
           this.items = data;
           this.total = data.length;
@@ -48,6 +50,27 @@ export const useWalletsStore = defineStore("wallets", {
       }
     },
 
+    async fetchAll({ page = 0, size = 100 } = {}) {
+      this.loading = true;
+      this.error = "";
+      try {
+        const { data } = await listWallets({ page, size });
+        if (Array.isArray(data)) {
+          this.items = data;
+          this.total = data.length;
+        } else {
+          this.items = data.content || [];
+          this.total = data.totalElements ?? this.items.length;
+          this.page = data.number ?? page;
+          this.size = data.size ?? size;
+        }
+      } catch (e) {
+        this.error = e?.response?.data?.message || "Failed to load all wallets";
+      } finally {
+        this.loading = false;
+      }
+    },
+
     async ensureCurrencies() {
       if (this.currencies.length) return this.currencies;
       this.currencies = await getCurrencies();
@@ -57,7 +80,6 @@ export const useWalletsStore = defineStore("wallets", {
     async createOne(payload) {
       const toast = useToast();
       try {
-        // normalizuj broj
         const balance =
           payload.balance === "" || payload.balance == null
             ? undefined
@@ -92,7 +114,6 @@ export const useWalletsStore = defineStore("wallets", {
     async setArchived(id, archived = true) {
       const toast = useToast();
       try {
-        // nađi wallet u memoriji ili ga dohvati
         let w = this.items.find((x) => x.id === id);
         if (!w) {
           const { data } = await getWallet(id);

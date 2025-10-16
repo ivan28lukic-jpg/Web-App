@@ -61,6 +61,7 @@ public class UserController {
     }
 
 
+
     @GetMapping("/me")
     public ResponseEntity<UserResponse> me(Authentication authentication) {
         if (authentication == null || authentication.getName() == null) {

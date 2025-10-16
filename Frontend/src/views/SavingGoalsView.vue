@@ -8,8 +8,11 @@ import GoalTransferForm from "@/components/GoalTransferForm.vue";
 import SavingGoalProgressChart from "@/components/SavingGoalProgressChart.vue";
 import "@/assets/categories-look.css"; // ⬅ isti izgled kao Categories
 import { useWalletsStore } from "@/stores/storeWallets";
+import { useAuthStore } from "@/stores/auth"; // DODATO
 
 const store = useSavingGoalsStore();
+const auth = useAuthStore(); // DODATO
+
 const q = ref("");
 watch(q, v => (store.search = v));
 
@@ -21,9 +24,16 @@ const transferMode = ref("contribute");
 const walletsStore = useWalletsStore();
 
 function openCreate() {
+  let ownerId = auth.user?.role === "ADMIN" ? store.ownerId : auth.user?.id;
+  if (!ownerId) {
+    alert("Odaberite korisnika pre kreiranja cilja!");
+    return;
+  }
+  // editGoal je null za create, ali ownerId mora biti prosleđen
   editGoal.value = null;
   showEdit.value = true;
 }
+
 function openEdit(g) {
   editGoal.value = { ...g };
   showEdit.value = true;
@@ -41,13 +51,13 @@ async function submitEdit(payload) {
 async function openContrib(goal) {
   transferMode.value = "contribute";
   editGoal.value = { ...goal };
-  await walletsStore.fetchForOwner(goal.ownerId); // ← OVO JE KLJUČNO
+  await walletsStore.fetchForOwner(goal.ownerId);
   showTransfer.value = true;
 }
 async function openWithdraw(goal) {
   transferMode.value = "withdraw";
   editGoal.value = { ...goal };
-  await walletsStore.fetchForOwner(goal.ownerId); // ← OVO JE KLJUČNO
+  await walletsStore.fetchForOwner(goal.ownerId);
   showTransfer.value = true;
 }
 function closeTransfer() {
@@ -112,7 +122,12 @@ onMounted(() => store.load());
 
     <!-- CREATE / EDIT -->
     <BaseModal v-model="showEdit" :title="editGoal ? 'Change goal' : 'New goal'">
-      <SavingGoalForm :initial="editGoal" :owner-id="store.ownerId" @submit="submitEdit" @cancel="closeEdit" />
+      <SavingGoalForm
+        :initial="editGoal"
+        :owner-id="auth.user?.role === 'ADMIN' ? store.ownerId : auth.user?.id"
+        @submit="submitEdit"
+        @cancel="closeEdit"
+      />
     </BaseModal>
 
     <!-- TRANSFERS -->
@@ -147,4 +162,3 @@ onMounted(() => store.load());
   transition: width 1s ease-in-out;
 }
 </style>
-

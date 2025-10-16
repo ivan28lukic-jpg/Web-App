@@ -21,6 +21,7 @@ export const useWalletsStore = defineStore("wallets", {
     size: 20,
     total: 0,
     currencies: [],
+    ownerId: null, // admin bira usera, user ne dira ovo
   }),
 
   getters: {
@@ -31,23 +32,32 @@ export const useWalletsStore = defineStore("wallets", {
       const userId = auth.user?.id;
       return s.items.filter((w) => w.ownerId === userId);
     },
+    visible: (s) => {
+      const auth = useAuthStore();
+      return auth.user?.role === "ADMIN"
+        ? s.items
+        : s.items.filter((w) => w.ownerId === auth.user?.id);
+    },
   },
 
   actions: {
-    async fetch({ search = "", page = 0, size = 100, ownerId = null } = {}) {
+    setOwner(id) { this.ownerId = Number(id) || null; },
+
+    async fetch({ search = "", page = 0, size = 100 } = {}) {
       this.loading = true;
       this.error = "";
       try {
+        const auth = useAuthStore();
         let data;
-        if (ownerId) {
-          // Dohvati samo za datog vlasnika
-          const res = await listWalletsByOwner(ownerId);
+        // ADMIN bira usera
+        if (auth.user?.role === "ADMIN" && this.ownerId) {
+          const res = await listWalletsByOwner(this.ownerId);
           data = Array.isArray(res.data) ? res.data : (res.data?.content ?? []);
           this.items = data;
           this.total = data.length;
-        } else {
-          // Svi novčanici (ili po search parametru)
-          const { data: dataRaw } = await listWallets({ search, page, size });
+        // ADMIN vidi sve
+        } else if (auth.user?.role === "ADMIN") {
+          const { data: dataRaw } = await listWallets({ search, page, size }); // NEMA ownerId!
           if (Array.isArray(dataRaw)) {
             this.items = dataRaw;
             this.total = dataRaw.length;
@@ -57,6 +67,16 @@ export const useWalletsStore = defineStore("wallets", {
             this.page = dataRaw.number ?? page;
             this.size = dataRaw.size ?? size;
           }
+        // OBICAN user vidi svoje
+        } else if (auth.user?.id) {
+          const res = await listWalletsByOwner(auth.user.id);
+          data = Array.isArray(res.data) ? res.data : (res.data?.content ?? []);
+          this.items = data;
+          this.total = data.length;
+        } else {
+          this.items = [];
+          this.loading = false;
+          return;
         }
       } catch (e) {
         this.error = e?.response?.data?.message || "Failed to load wallets";
@@ -69,13 +89,13 @@ export const useWalletsStore = defineStore("wallets", {
       const auth = useAuthStore();
       const userId = auth.user?.id;
       if (userId) {
-        await this.fetch({ ownerId: userId });
+        await this.fetch();
       }
     },
 
     async fetchForOwner(ownerId) {
-      // Wrapper za jasnoću
-      return this.fetch({ ownerId });
+      this.setOwner(ownerId);
+      return this.fetch();
     },
 
     async ensureCurrencies() {
@@ -86,13 +106,19 @@ export const useWalletsStore = defineStore("wallets", {
 
     async createOne(payload) {
       const toast = useToast();
+      const auth = useAuthStore();
       try {
+        // Odredi pravi ownerId
+        let ownerId = auth.user?.role === "ADMIN" && this.ownerId
+          ? this.ownerId
+          : auth.user?.id;
+
         const balance =
           payload.balance === "" || payload.balance == null
             ? undefined
             : Number(String(payload.balance).replace(",", "."));
-        await createWallet({ ...payload, balance });
-        await this.fetchMine();
+        await createWallet({ ...payload, ownerId, balance });
+        await this.fetch();
         toast.success("Wallet created");
       } catch (e) {
         const msg = e?.response?.data?.message || "Create failed";
@@ -109,7 +135,7 @@ export const useWalletsStore = defineStore("wallets", {
             ? undefined
             : Number(String(payload.balance).replace(",", "."));
         await updateWallet(id, { ...payload, balance });
-        await this.fetchMine();
+        await this.fetch();
         toast.success("Wallet updated");
       } catch (e) {
         const msg = e?.response?.data?.message || "Update failed";
@@ -127,7 +153,7 @@ export const useWalletsStore = defineStore("wallets", {
           w = data;
         }
         await archiveWalletFull(id, w, archived);
-        await this.fetchMine();
+        await this.fetch();
         toast.success(archived ? "Wallet archived" : "Wallet restored");
       } catch (e) {
         const msg = e?.response?.data?.message || "Archive toggle failed";
@@ -140,7 +166,7 @@ export const useWalletsStore = defineStore("wallets", {
       const toast = useToast();
       try {
         await deleteWallet(id);
-        await this.fetchMine();
+        await this.fetch();
         toast.success("Wallet deleted");
       } catch (e) {
         const msg = e?.response?.data?.message || "Delete failed";

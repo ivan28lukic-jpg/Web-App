@@ -10,6 +10,7 @@ import {
   getGoalProgress,
 } from "@/services/servicesSavingGoals";
 import { useToast } from "@/composables/useToast";
+import { useAuthStore } from "@/stores/auth";
 
 export const useSavingGoalsStore = defineStore("savingGoals", {
   state: () => ({
@@ -19,8 +20,7 @@ export const useSavingGoalsStore = defineStore("savingGoals", {
     error: "",
     creating: false,
     contributing: false,
-    ownerId: Number(localStorage.getItem("ownerId") || 0),
-    userRole: localStorage.getItem("role") || "USER",
+    ownerId: null, // SAMO kad admin bira usera
     includeArchived: false,
     search: "",
     progressLoading: false,
@@ -33,36 +33,38 @@ export const useSavingGoalsStore = defineStore("savingGoals", {
     archived: (state) => state.items.filter((g) => !!g.archived),
     byId: (state) => (id) => state.items.find((g) => g.id === id),
     filtered(state) {
+      const auth = useAuthStore();
       const q = state.search.trim().toLowerCase();
-      if (!q) return state.items;
-      return state.items.filter((g) => (g.name || "").toLowerCase().includes(q));
+      let goals = auth.user?.role === "ADMIN"
+        ? state.items
+        : state.items.filter((g) => g.ownerId == auth.user?.id);
+      if (!q) return goals;
+      return goals.filter((g) => (g.name || "").toLowerCase().includes(q));
     },
   },
 
   actions: {
     setOwner(id) {
-      this.ownerId = Number(id);
-      localStorage.setItem("ownerId", id);
-    },
-    setRole(role) {
-      this.userRole = role;
-      localStorage.setItem("role", role);
+      this.ownerId = Number(id) || null;
     },
     setSearch(val) { this.search = val; },
 
     async load() {
       this.loading = true;
       this.error = "";
+
       try {
+        const auth = useAuthStore();
         let data;
-        if (this.userRole === "ADMIN" && this.ownerId) {
-          // Admin gleda ciljeve odabranog usera
+        if (auth.user?.role === "ADMIN" && this.ownerId) {
+          // ADMIN gleda ciljeve izabranog usera
           ({ data } = await listSavingGoalsByOwner(this.ownerId, this.includeArchived));
-        } else if (this.userRole === "ADMIN") {
-          // Admin nije izabrao usera — vidi sve ciljeve
+        } else if (auth.user?.role === "ADMIN") {
+          // ADMIN vidi sve ciljeve
           ({ data } = await listSavingGoalsAll(this.includeArchived));
-        } else if (this.ownerId) {
-          ({ data } = await listSavingGoalsByOwner(this.ownerId, this.includeArchived));
+        } else if (auth.user?.id) {
+          // OBICAN user vidi samo svoje ciljeve
+          ({ data } = await listSavingGoalsByOwner(auth.user.id, this.includeArchived));
         } else {
           this.items = [];
           this.loading = false;
@@ -94,9 +96,15 @@ export const useSavingGoalsStore = defineStore("savingGoals", {
     async createGoal(payload) {
       this.creating = true;
       this.error = "";
+      const auth = useAuthStore();
       const toast = useToast?.();
       try {
-        await createSavingGoal(payload);
+        // Odredi pravi ownerId
+        let ownerId = auth.user?.role === "ADMIN" && this.ownerId
+          ? this.ownerId
+          : auth.user?.id;
+
+        await createSavingGoal({ ...payload, ownerId });
         toast?.success?.("Cilj štednje uspešno kreiran!");
         await this.load();
       } catch (e) {

@@ -60,6 +60,7 @@ public class UserController {
         return ResponseEntity.ok(toResponse(u));
     }
 
+
     @GetMapping("/me")
     public ResponseEntity<UserResponse> me(Authentication authentication) {
         if (authentication == null || authentication.getName() == null) {

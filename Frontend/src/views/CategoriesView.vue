@@ -91,7 +91,7 @@
 
 <script setup>
 import { ref, onMounted, watch, computed} from "vue";  //watch sluzi za filtriranje dok kucamo
-import { useCategoriesStore } from "@/stores/categories";
+import { useCategoriesStore } from "@/stores/storeCategories";
 import CategoryModal from "@/components/CategoryModal.vue";
 import ConfirmDialog from "@/components/ConfirmDialog.vue";
 import { useToast } from "@/composables/useToast";

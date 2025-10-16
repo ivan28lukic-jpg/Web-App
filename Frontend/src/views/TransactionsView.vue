@@ -89,7 +89,7 @@
 import { ref, onMounted, computed } from "vue";
 import { useWalletsStore } from "@/stores/storeWallets";
 import { useTransactionsStore } from "@/stores/transactions";
-import { useCategoriesStore } from "@/stores/categories";
+import { useCategoriesStore } from "@/stores/storeCategories";
 import { useToast } from "@/composables/useToast";
 import TransactionModal from "@/components/TransactionModal.vue";
 import ConfirmDialog from "@/components/ConfirmDialog.vue";

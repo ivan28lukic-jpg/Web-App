@@ -6,14 +6,19 @@ import group19.WebFinanceApp.controller.dto.response.CategoryResponse;
 import group19.WebFinanceApp.model.Category;
 import group19.WebFinanceApp.model.CategoryType;
 import group19.WebFinanceApp.model.User;
+import group19.WebFinanceApp.security.JwtUtil;
 import group19.WebFinanceApp.repository.CategoryRepository;
 import group19.WebFinanceApp.repository.TransactionRepository;
 import group19.WebFinanceApp.repository.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 
 import java.util.List;
 import java.util.Map;
@@ -25,13 +30,17 @@ public class CategoryController {
     private final CategoryRepository categories;
     private final UserRepository users;
     private final TransactionRepository transactions;
+    private final JwtUtil jwtUtil;
 
+    @Autowired
     public CategoryController(CategoryRepository categories,
                               UserRepository users,
-                              TransactionRepository transactions) {
+                              TransactionRepository transactions,
+                              JwtUtil jwtUtil) {
         this.categories = categories;
         this.users = users;
         this.transactions = transactions;
+        this.jwtUtil = jwtUtil;
     }
 
     // ====== LIST sa filterima ?ownerId=&type=&includeArchived=
@@ -72,15 +81,55 @@ public class CategoryController {
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).<CategoryResponse>build());
     }
 
-    // CREATE (ownerId je opcionalan; ako je null -> global)
+    // Helper: Get current user from JWT token in header
+    private User getCurrentUser(HttpServletRequest request) {
+        String header = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (header == null || !header.startsWith("Bearer ")) return null;
+        String token = header.substring(7).trim();
+        Long userId = null;
+        try {
+            if (!jwtUtil.isValid(token)) return null;
+            userId = jwtUtil.getUserId(token);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+        if (userId == null) return null;
+        return users.findById(userId).orElse(null);
+    }
+
+    // CREATE (ownerId je obavezan za user; ako je null -> global, ali samo admin može praviti globalne)
     @PostMapping
-    public ResponseEntity<CategoryResponse> create(@Valid @RequestBody CategoryCreateRequest in) {
+    public ResponseEntity<CategoryResponse> create(@Valid @RequestBody CategoryCreateRequest in,
+                                                   Authentication authentication,
+                                                   HttpServletRequest request) {
+        User currentUser = getCurrentUser(request);
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        boolean isAdmin = currentUser.getRole().equals("ADMIN");
+
         User owner = null;
-        if (in.getOwnerId() != null) {
-            owner = users.findById(in.getOwnerId()).orElse(null);
-            if (owner == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).<CategoryResponse>build();
+        if (isAdmin) {
+            // Admin može da pravi globalne ili lične
+            if (in.getOwnerId() != null) {
+                owner = users.findById(in.getOwnerId()).orElse(null);
+                if (owner == null) {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+                }
             }
+            // Ako ownerId == null, owner ostaje null (globalna)
+        } else {
+            // OwnerId mora biti postavljen za usera
+            if (in.getOwnerId() == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(null);
+            }
+            if (!in.getOwnerId().equals(currentUser.getId())) {
+                // Ne dozvoli da user kreira za drugog usera
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            owner = currentUser;
         }
 
         // anti-duplikat po (owner, name, type)
@@ -88,7 +137,7 @@ public class CategoryController {
                 ? categories.existsByOwnerIsNullAndNameIgnoreCaseAndType(in.getName(), in.getType())
                 : categories.existsByOwnerIdAndNameIgnoreCaseAndType(owner.getId(), in.getName(), in.getType());
         if (duplicate) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).<CategoryResponse>build();
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
 
         Category c = new Category();
@@ -97,7 +146,6 @@ public class CategoryController {
         c.setType(in.getType());
         c.setColor(in.getColor());
         c.setArchived(false);
-        // ako je owner null, tretira se kao global/predefined
         c.setPredefined(owner == null);
 
         c = categories.save(c);
@@ -218,8 +266,6 @@ public class CategoryController {
                 c.isArchived(),
                 c.getCreatedAt()
         );
-        // Bitno: više NEMA fallback-a na owner==null za predefined;
-        // front se oslanja isključivo na kolonu 'predefined'
         dto.setPredefined(c.isPredefined());
         dto.setMine(c.getOwner() != null);
         return dto;

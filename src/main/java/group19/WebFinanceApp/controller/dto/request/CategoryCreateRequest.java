@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Pattern;
 
 public class CategoryCreateRequest {
 
-    // Ako je null -> global category
+    @NotNull(message = "OwnerId is required for user category creation")
     private Long ownerId;
 
     @NotBlank

@@ -1,0 +1,65 @@
+/* Shared look&feel identičan ekranu Categories  */
+:root{
+  --card-bg: #11181b;      /* panel */
+  --card-line: #203036;    /* border */
+  --card-fg: #e8efec;      /* text */
+  --btn-green: #20c589;
+}
+
+/* page container kao na Categories */
+.data-page{
+  min-height: calc(100vh - 80px);
+  padding: 1.25rem;
+  border-radius: 1rem;
+  color: var(--card-fg);
+}
+
+/* centrirana kartica iste širine */
+.data-card{
+  max-width: 1440px;     /* isto kao Categories kartica */
+  background: rgba(255, 255, 255, 0.03);
+  margin: 0 auto;
+  border: 1px solid var(--card-line);
+  border-radius: 16px;
+  box-shadow: 0 10px 32px rgba(0,0,0,.35);
+}
+
+/* naslov i toolbar kao gore desno na Categories */
+.data-card__head{
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 1rem 1rem .5rem 1rem; border-bottom: 1px solid var(--card-line);
+}
+.data-card__title{ margin:0; font-size:1.35rem; font-weight:700; letter-spacing:.2px }
+.data-toolbar{ display:flex; align-items:center; gap:.6rem; flex-wrap:wrap; }
+.data-input{
+  padding:.55rem .8rem; border:1px solid rgba(255, 255, 255, 0.12); border-radius:.7rem;
+  background: var(--ctrl-bg); color:var(--card-fg); min-width:220px; outline:none;
+}
+.data-input:focus{ border-color:var(--btn-green); box-shadow:0 0 0 3px rgba(32,197,137,.18) }
+.data-switch{ display:flex; align-items:center; gap:.45rem; color:#b9c8c2 }
+
+.data-btn{ padding:.55rem .85rem; border-radius:.8rem; font-weight:700; cursor:pointer;
+  border:1px solid var(--btn-green); background:transparent; color:var(--btn-green);
+}
+.data-btn--primary{ background:var(--btn-green); color:#0b1114 }
+
+/* tabela identična Categories */
+.data-table{ width:100%; border-collapse:collapse; }
+.data-table th, .data-table td{
+  padding:.8rem .9rem; border-bottom:1px solid var(--card-line); text-align:left;
+}
+.data-table th{ opacity:.9; font-weight:700 }
+.data-table__empty{ text-align:center; opacity:.7; padding:1rem }
+
+/* dugmad u tabeli */
+.table-actions{ display:flex; gap:.45rem; flex-wrap:wrap }
+.btn-chip{
+  padding:.45rem .7rem; border-radius:.6rem; border:1px solid var(--btn-green);
+  background:transparent; color:var(--btn-green); font-weight:700; cursor:pointer;
+}
+.btn-chip:hover{ background:rgba(32,197,137,.08) }
+.btn-chip--danger{ border-color:#d8615b; color:#ff7d75 }
+
+/* progress bar u ćeliji (isti ton) */
+.bar{position:relative;width:160px;height:10px;border-radius:999px;background:#0f1316;border:1px solid #233038;overflow:hidden;display:inline-block;margin-right:.5rem}
+.fill{height:100%;background:var(--btn-green)}

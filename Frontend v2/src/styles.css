@@ -1,0 +1,83 @@
+:root {
+
+    .navbar a.router-link-active {
+        background: var(--c-green);
+        color: var(--c-black);
+    }
+
+
+    .container {
+        max-width: 1100px;
+        margin: 24px auto;
+        padding: 0 16px;
+    }
+
+
+    .card {
+        background: var(--c-white);
+        border: 1px solid #eaeaea;
+        border-radius: 14px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    }
+
+    .card__body {
+        padding: 16px;
+    }
+
+    .card__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 14px;
+        background: var(--c-green);
+        color: var(--c-black);
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+    }
+
+    .btn--ghost {
+        background: transparent;
+        border: 1px solid #dcdcdc;
+        color: var(--c-black);
+    }
+
+    .btn:disabled { 
+        opacity: 0.6; cursor: not-allowed;
+    }
+
+
+    .input, .select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #e6e6e6;
+    border-radius: 10px;
+    outline: none;
+    }
+    .input:focus, .select:focus {
+    border-color: var(--c-green);
+    box-shadow: 0 0 0 3px rgba(0, 168, 107, 0.15);
+    }
+
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .table th, .table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #efefef;
+        text-align: left;
+    }
+}

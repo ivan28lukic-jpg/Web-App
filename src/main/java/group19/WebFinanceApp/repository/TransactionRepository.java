@@ -179,7 +179,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
         JOIN categories c ON c.id = t.category_id
         JOIN wallets    w ON w.id = t.wallet_id
         WHERE (:walletId IS NULL OR t.wallet_id = :walletId)
-          AND (:ownerId  IS NULL OR w.owner_id  = :OwnerId)
+          AND (:ownerId  IS NULL OR w.owner_id  = :ownerId)
           AND (:type     IS NULL OR c.type      = :type)
           AND (:fromTs   IS NULL OR t.occurred_at >= :fromTs)
           AND (:toTs     IS NULL OR t.occurred_at <= :toTs)

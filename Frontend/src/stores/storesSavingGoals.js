@@ -40,31 +40,41 @@ export const useSavingGoalsStore = defineStore("savingGoals", {
   },
 
   actions: {
-    setOwner(id) { this.ownerId = Number(id); },
-    setRole(role) { this.userRole = role; },
+    setOwner(id) {
+      this.ownerId = Number(id);
+      localStorage.setItem("ownerId", id);
+    },
+    setRole(role) {
+      this.userRole = role;
+      localStorage.setItem("role", role);
+    },
     setSearch(val) { this.search = val; },
 
     async load() {
-    this.loading = true;
-    this.error = "";
-    try {
-      let data;
-      if (this.userRole === "ADMIN") {
-        ({ data } = await listSavingGoalsAll(this.includeArchived));
-      } else if (this.ownerId) {
-        ({ data } = await listSavingGoalsByOwner(this.ownerId, this.includeArchived));
-      } else {
-        this.items = [];
+      this.loading = true;
+      this.error = "";
+      try {
+        let data;
+        if (this.userRole === "ADMIN" && this.ownerId) {
+          // Admin gleda ciljeve odabranog usera
+          ({ data } = await listSavingGoalsByOwner(this.ownerId, this.includeArchived));
+        } else if (this.userRole === "ADMIN") {
+          // Admin nije izabrao usera — vidi sve ciljeve
+          ({ data } = await listSavingGoalsAll(this.includeArchived));
+        } else if (this.ownerId) {
+          ({ data } = await listSavingGoalsByOwner(this.ownerId, this.includeArchived));
+        } else {
+          this.items = [];
+          this.loading = false;
+          return;
+        }
+        this.items = Array.isArray(data) ? data : (data?.content ?? []);
+      } catch (e) {
+        this.error = e?.response?.data?.message || e.message || "Greška pri dohvatanju ciljeva štednje.";
+      } finally {
         this.loading = false;
-        return;
       }
-      this.items = Array.isArray(data) ? data : (data?.content ?? []);
-    } catch (e) {
-      this.error = e?.response?.data?.message || e.message || "Greška pri dohvatanju ciljeva štednje.";
-    } finally {
-      this.loading = false;
-  }
-},
+    },
 
     async fetchProgress(goalId) {
       this.progressLoading = true;

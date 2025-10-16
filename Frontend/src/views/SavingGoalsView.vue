@@ -33,8 +33,8 @@ function closeEdit() {
   editGoal.value = null;
 }
 async function submitEdit(payload) {
-  if (editGoal.value?.id) await store.edit(editGoal.value.id, payload);
-  else await store.add(payload);
+  if (editGoal.value?.id) await store.updateGoal(editGoal.value.id, payload);
+  else await store.createGoal(payload);
   closeEdit();
 }
 
@@ -58,8 +58,8 @@ async function submitTransfer(payload) {
   try {
     if (!editGoal.value?.id) return;
     if (transferMode.value === "contribute")
-      await store.contribute(editGoal.value.id, payload);
-    else await store.withdraw(editGoal.value.id, payload);
+      await store.contributeToGoal(editGoal.value.id, payload);
+    else await store.withdrawFromGoal(editGoal.value.id, payload);
     closeTransfer();
   } catch (e) {
     alert(e.message);
@@ -76,7 +76,7 @@ function closeProgress() {
   editGoal.value = null;
 }
 async function onDelete(g) {
-  if (confirm(`Delete goal "${g.name}"?`)) await store.remove(g.id);
+  if (confirm(`Delete goal "${g.name}"?`)) await store.deleteGoal(g.id);
 }
 
 onMounted(() => store.load());

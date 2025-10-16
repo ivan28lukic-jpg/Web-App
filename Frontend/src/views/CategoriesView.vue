@@ -120,7 +120,7 @@ const isGlobal = (c) =>
  const isMine = (c) => {
   if (userId.value == null) return false;
   const owners = [c?.ownerId, c?.userId, c?.createdBy];
-  return owners.some(v => v === userId.value);
+  return owners.some(v => Number(v) === Number(userId.value));
 };
 
  // --- lokalni prikaz (bez zavisnosti od server-side filtera) ---
@@ -169,7 +169,11 @@ function typeStyle(t) {
 
 async function copyFromGlobal(c) {
   try {
-    await cats.createOne({ name: c.name, type: String(c.type||"").toUpperCase() });
+    await cats.createOne({
+      name: c.name,
+      type: String(c.type||"").toUpperCase(),
+      ownerId: userId.value
+    });
     await reload();
     toast.success(`Added "${c.name}" to your categories`);
   } catch (e) {
@@ -202,19 +206,21 @@ function openEdit(c) {
 
 async function onSave(payload) {
     try {
+        // Uvek dodaj ownerId za korisničke kategorije
+        const fullPayload = { ...payload, ownerId: userId.value };
+
         if (current.value && current.value.id) {
-            // zaštita: ako slučajno stigne globalna u edit, prekini
             if (!isMine(current.value)) {
                 toast.warning("Predefined categories cannot be edited. Create a personal copy instead.");
                 return;
             }
-      await cats.updateOne(current.value.id, payload);
+            await cats.updateOne(current.value.id, fullPayload);
         } else {
-            await cats.createOne(payload);
+            await cats.createOne(fullPayload);
         }
         await reload();
         modalOpen.value = false;
-     current.value = null;
+        current.value = null;
     } catch (e) {
         toast.error(e?.response?.data?.message || "Operation failed");
     }

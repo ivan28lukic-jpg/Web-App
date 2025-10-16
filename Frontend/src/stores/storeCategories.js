@@ -17,7 +17,7 @@ export const useCategoriesStore = defineStore("categories", {
     total: 0,
     filters: {
       search: "",
-      type: "", // INCOME | EXPENSE | "" (all) – ako backend podržava
+      type: "",
     },
   }),
 
@@ -26,6 +26,7 @@ export const useCategoriesStore = defineStore("categories", {
       this.loading = true;
       this.error = "";
       try {
+        // Izvuci ownerId iz localStorage, može biti string!
         const ownerId = localStorage.getItem("ownerId");
 
         if (!ownerId) {
@@ -62,8 +63,8 @@ export const useCategoriesStore = defineStore("categories", {
     async createOne(payload) {
       const toast = useToast();
       try {
-        const ownerId = localStorage.getItem("ownerId");
-        // Dodaj ownerId u payload da bi bila lična kategorija
+        // Koristi ownerId iz payload-a ako postoji, inače iz localStorage
+        const ownerId = payload.ownerId ?? localStorage.getItem("ownerId");
         const data = {
           ...payload,
           ownerId,
@@ -80,8 +81,10 @@ export const useCategoriesStore = defineStore("categories", {
     async updateOne(id, payload) {
       const toast = useToast();
       try {
+        // Isto, šalji ownerId ako je u payload-u
         const body = {
           ...payload,
+          ownerId: payload.ownerId ?? localStorage.getItem("ownerId"),
           type: payload.type ? String(payload.type).toUpperCase() : undefined,
         };
 

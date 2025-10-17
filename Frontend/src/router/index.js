@@ -53,14 +53,22 @@ router.beforeEach((to, from, next) => {
   const auth = useAuthStore();
   const isPublic = to.meta?.public === true;
 
-  if (isPublic) return next();
+  // Ako je ruta javna (public), dozvoli pristup
+  if (isPublic) {
+    return next();
+  }
 
-  // zaštićene rute
-  if (!auth.isAuthenticated) return next({ name: "login" });
+  // Zaštićene rute: ako nije prijavljen, preusmeri na landing
+  if (!auth.isAuthenticated) {
+    return next({ name: "landing" });
+  }
 
-  // admin-only
-  if (to.meta?.requiresAdmin && !auth.isAdmin) return next({ name: "dashboard" });
+  // Admin-only rute: ako nije admin, preusmeri na dashboard
+  if (to.meta?.requiresAdmin && !auth.isAdmin) {
+    return next({ name: "dashboard" });
+  }
 
+  // Sve ostalo dozvoli
   next();
 });
 

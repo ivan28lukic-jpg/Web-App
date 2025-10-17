@@ -11,25 +11,22 @@ export function listWalletsByOwner(ownerId) {
   return api.get(`/wallets?ownerId=${ownerId}`);
 }
 
-// Helper za štedne novčanike — pokušava više polja/tipova
+// Helper za štedne novčanike — sada filtrira po savings polju
 export async function getSavingsWallets(ownerId) {
   const { data } = await listWalletsByOwner(ownerId);
   const all = Array.isArray(data) ? data : (data?.content ?? []);
-  return all.filter(w => {
-    const t = (w.type || w.walletType || w.kind || "").toString().toUpperCase();
-    const name = (w.name || "").toLowerCase();
-    return t.includes("SAVING") || name.includes("saving") || name.includes("šted");
-  });
+  return all.filter(w => w.savings === true); // filtrira po savings polju
 }
 
 // CREATE
 export function createWallet(payload) {
-  // backend koristi: name, currencyCode, balance, archived
+  // backend koristi: name, currencyCode, balance, archived, savings
   return api.post("/wallets", {
     name: payload.name,
     currencyCode: payload.currencyCode,
-    balance: payload.balance,       // <-- KLJUČNO: koristi balance!
+    balance: payload.balance,       // koristi balance!
     archived: payload.archived,
+    savings: payload.savings,       // DODATO: šalje savings polje!
   });
 }
 
@@ -41,6 +38,7 @@ export function updateWallet(id, payload) {
     currencyCode: payload.currencyCode,
     balance: payload.balance,
     archived: payload.archived,
+    savings: payload.savings, // DODATO: šalje savings polje (ako backend dozvoljava)
   });
 }
 
@@ -51,6 +49,7 @@ export async function archiveWalletFull(id, fullWallet, archived) {
     currencyCode: fullWallet.currencyCode,
     balance: fullWallet.balance,
     archived,
+    savings: fullWallet.savings, // DODATO: šalje savings polje
   });
 }
 

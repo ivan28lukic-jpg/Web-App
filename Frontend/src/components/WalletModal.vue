@@ -18,7 +18,6 @@
           <template #left>💼</template>
         </Input>
         
-
         <!-- CURRENCY & BALANCE (samo kod CREATE) -->
         <div v-if="!isEdit" class="form__row form__row--2">
           <Select
@@ -42,6 +41,11 @@
           >
             <template #left>💰</template>
           </Input>
+        </div>
+        
+        <!-- SAVINGS WALLET CHECKBOX: dodato -->
+        <div v-if="!isEdit" style="margin-top: 12px;">
+          <Checkbox v-model="form.savings">Štedni novčanik</Checkbox>
         </div>
 
         <!-- ARCHIVED (uklonjeno iz edit moda) -->
@@ -86,8 +90,9 @@ const loading = ref(false);
 const form = reactive({
   name: "",
   currencyCode: "",
-  balance: "", // Koristi balance svuda!
+  balance: "",
   archived: false,
+  savings: false, // <-- dodato savings polje
 });
 
 const errors = reactive({ name: "", currencyCode: "" });
@@ -101,12 +106,14 @@ watch(
       form.currencyCode = w.currencyCode || "";
       form.balance = w.balance ?? "";
       form.archived = !!w.archived;
+      form.savings = !!w.savings; // <-- setujemo savings
     } else {
       // CREATE mode: reset
       form.name = "";
       form.currencyCode = "";
       form.balance = "";
       form.archived = false;
+      form.savings = false; // <-- reset savings
     }
     errors.name = "";
     errors.currencyCode = "";
@@ -116,7 +123,6 @@ watch(
 
 function validate() {
   errors.name = form.name ? "" : "Name is required";
-  // valuta je obavezna samo kod CREATE
   errors.currencyCode = isEdit.value
     ? ""
     : form.currencyCode
@@ -144,9 +150,10 @@ async function submit() {
         balance:
           form.balance === "" ? undefined : Number(normalize(form.balance)),
         archived: form.archived,
+        savings: form.savings, // <-- šaljemo savings polje
       };
     }
-    emit("save", payload); // šaljemo balance!
+    emit("save", payload);
   } finally {
     loading.value = false;
   }

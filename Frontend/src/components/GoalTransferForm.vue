@@ -2,9 +2,9 @@
 import { reactive, ref, watch, computed } from "vue";
 import { listWalletsByOwner } from "@/services/serviceWallets";
 
+// ISPRAVLJENO: Uklonjen prop ownerId, koristi se samo goal.ownerId
 const props = defineProps({
   mode: { type: String, required: true },     // "contribute" | "withdraw"
-  ownerId: { type: Number, required: true },  // ID korisnika koji inicira, ali NE koristi se za prikaz wallets
   goal: { type: Object, required: true },     // goal.ownerId je pravi vlasnik cilja
 });
 const emit = defineEmits(["submit", "cancel"]);
@@ -14,7 +14,7 @@ const wallets = ref([]);
 const loading = ref(false);
 const error = ref(null);
 
-// Učitaj novčanike vlasnika cilja (goal.ownerId), ne trenutnog usera
+// Učitaj novčanike vlasnika cilja (goal.ownerId)
 async function loadWalletsForGoalOwner() {
   if (!props.goal?.ownerId) {
     wallets.value = [];

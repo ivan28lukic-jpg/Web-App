@@ -8,7 +8,7 @@ import GoalTransferForm from "@/components/GoalTransferForm.vue";
 import SavingGoalProgressChart from "@/components/SavingGoalProgressChart.vue";
 import "@/assets/categories-look.css";
 import { useWalletsStore } from "@/stores/storeWallets";
-import { useAuthStore } from "@/stores/auth"; // DODATO
+import { useAuthStore } from "@/stores/auth";
 
 const store = useSavingGoalsStore();
 const auth = useAuthStore();
@@ -131,7 +131,8 @@ onMounted(() => store.load());
 
     <!-- TRANSFERS -->
     <BaseModal v-model="showTransfer" :title="transferMode==='contribute' ? 'Deposit to goal' : 'Withdraw from goal'">
-      <GoalTransferForm :mode="transferMode" :owner-id="store.ownerId" :goal="editGoal" @submit="submitTransfer" @cancel="closeTransfer" />
+      <!-- ISPRAVLJENO: Uklonjen prop :owner-id, GoalTransferForm sada prima samo :mode i :goal -->
+      <GoalTransferForm :mode="transferMode" :goal="editGoal" @submit="submitTransfer" @cancel="closeTransfer" />
     </BaseModal>
 
     <!-- PROGRESS -->

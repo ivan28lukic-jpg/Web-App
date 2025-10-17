@@ -43,7 +43,8 @@ export const useWalletsStore = defineStore("wallets", {
   actions: {
     setOwner(id) { this.ownerId = Number(id) || null; },
 
-    async fetch({ search = "", page = 0, size = 100 } = {}) {
+    // IZMENJENO: Dodali smo parametar includeArchived za filter
+    async fetch({ search = "", page = 0, size = 100, includeArchived = false } = {}) {
       this.loading = true;
       this.error = "";
       try {
@@ -57,7 +58,7 @@ export const useWalletsStore = defineStore("wallets", {
           this.total = data.length;
         // ADMIN vidi sve
         } else if (auth.user?.role === "ADMIN") {
-          const { data: dataRaw } = await listWallets({ search, page, size }); // NEMA ownerId!
+          const { data: dataRaw } = await listWallets({ search, page, size, includeArchived }); // NEMA ownerId!
           if (Array.isArray(dataRaw)) {
             this.items = dataRaw;
             this.total = dataRaw.length;
@@ -67,9 +68,15 @@ export const useWalletsStore = defineStore("wallets", {
             this.page = dataRaw.number ?? page;
             this.size = dataRaw.size ?? size;
           }
-        // OBICAN user vidi svoje
+        // OBICAN user vidi svoje + filter archived
         } else if (auth.user?.id) {
-          const res = await listWalletsByOwner(auth.user.id);
+          const res = await listWallets({
+            search,
+            page,
+            size,
+            ownerId: auth.user.id,
+            includeArchived
+          });
           data = Array.isArray(res.data) ? res.data : (res.data?.content ?? []);
           this.items = data;
           this.total = data.length;
@@ -85,17 +92,17 @@ export const useWalletsStore = defineStore("wallets", {
       }
     },
 
-    async fetchMine() {
+    async fetchMine(includeArchived = false) {
       const auth = useAuthStore();
       const userId = auth.user?.id;
       if (userId) {
-        await this.fetch();
+        await this.fetch({ includeArchived });
       }
     },
 
-    async fetchForOwner(ownerId) {
+    async fetchForOwner(ownerId, includeArchived = false) {
       this.setOwner(ownerId);
-      return this.fetch();
+      return this.fetch({ includeArchived });
     },
 
     async ensureCurrencies() {

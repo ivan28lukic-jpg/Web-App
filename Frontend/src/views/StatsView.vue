@@ -1,6 +1,6 @@
 <template>
     <section>
-      <h1>Statistika prihoda i troškova</h1>
+      <h1>Statistic</h1>
       <components-stats
             :owner-id="authStore.isAdmin ? undefined : ownerId"
              :is-admin="authStore.isAdmin"

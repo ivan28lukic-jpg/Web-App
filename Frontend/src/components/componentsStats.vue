@@ -2,14 +2,14 @@
     <div class="stats-period">
       <form class="stats-filter" @submit.prevent="reload">
         <select v-model="periodType">
-          <option value="daily">Dnevni</option>
-          <option value="weekly">Nedeljni</option>
-          <option value="monthly">Mesečni</option>
-          <option value="yearly">Godišnji</option>
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+          <option value="yearly">Yearly</option>
         </select>
         <input type="date" v-model="from" />
         <input type="date" v-model="to" />
-        <button type="submit">Prikaži</button>
+        <button type="submit">Show</button>
       </form>
       <div class="chart-wrap">
         <canvas ref="chartEl"></canvas>
@@ -77,12 +77,12 @@ function renderChart() {
       labels,
       datasets: [
         {
-          label: "Prihodi",
+          label: "Income",
           backgroundColor: "#20c589",
           data: income,
         },
         {
-          label: "Troškovi",
+          label: "Expense",
           backgroundColor: "#ff7d75",
           data: expense,
         },
@@ -105,10 +105,56 @@ watch([periodType, from, to], reload);
 </script>
 
 <style scoped>
-.stats-period { padding: 2rem; background: #fafbff; border-radius: 1rem; max-width: 900px; margin: auto; }
-.stats-filter { display: flex; gap: 1rem; align-items: center; margin-bottom: 2rem; }
-.stats-filter select, .stats-filter input[type="date"] { padding: 0.5rem; border-radius: 0.5rem; border: 1px solid #ddd; }
-.chart-wrap { background: #fff; padding: 1rem; border-radius: 1rem; }
-.loading { color: #888; padding: 1rem; }
-.error { color: #ff574d; font-weight: bold; padding: 1rem; }
+.stats-period {
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 1rem;
+  max-width: 900px;
+  margin: auto;
+}
+.stats-filter {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+.stats-filter select,
+.stats-filter input[type="date"] {
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid #ddd;
+}
+.chart-wrap {
+  background: rgba(255, 255, 255, 1);
+  padding: 1rem;
+  border-radius: 1rem;
+}
+.loading {
+  color: #888;
+  padding: 1rem;
+}
+.error {
+  color: #ff574d;
+  font-weight: bold;
+  padding: 1rem;
+}
+
+option{
+  background: rgba(255, 255, 255, 1);
+}
+
+button{
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  background-color: var(--brand);
+  transition: 0.3s ease;
+  height: 100%;
+  cursor: pointer;
+}
+
+button:hover{
+  background-color: var(--brand-2);
+  transform: translateY(-5px);
+}
+
 </style>

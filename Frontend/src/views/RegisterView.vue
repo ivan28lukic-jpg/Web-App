@@ -62,6 +62,17 @@
         </div>
       </div>
 
+      <div class="form__group">
+        <label class="form__label" for="reg-birth">Birth date</label>
+        <input
+          id="reg-birth"
+          v-model="form.birthDate"
+          type="date"
+          class="form__control"
+          required
+        />
+      </div>
+
       <div class="form__row form__row--2">
         <div class="form__group">
           <label class="form__label" for="reg-pass">Password</label>
@@ -147,6 +158,7 @@ const form = reactive({
   email: "",
   password: "",
   confirm: "",
+  birthDate: "", // Dodato!
 });
 
 const show = ref(false);
@@ -165,17 +177,17 @@ const onSubmit = async () => {
 
   loading.value = true;
   try {
-    // prilagodi polja backendu ako se razlikuju
+    // Sada šalješ i birthDate backendu!
     await api.post("/auth/register", {
       firstName: form.firstName,
       lastName: form.lastName,
       username: form.username,
       email: form.email,
       password: form.password,
+      birthDate: form.birthDate, // Dodato!
     });
 
     success.value = true;
-    // mali timeout pa login
     setTimeout(() => router.push({ name: "login" }), 900);
   } catch (e) {
     error.value =

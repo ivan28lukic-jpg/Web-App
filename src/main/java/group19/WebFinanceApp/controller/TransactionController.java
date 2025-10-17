@@ -12,17 +12,21 @@ import group19.WebFinanceApp.model.Wallet;
 import group19.WebFinanceApp.repository.CategoryRepository;
 import group19.WebFinanceApp.repository.TransactionRepository;
 import group19.WebFinanceApp.repository.WalletRepository;
+import group19.WebFinanceApp.security.JwtUtil;
+import group19.WebFinanceApp.security.TokenBlacklist;
+import group19.WebFinanceApp.service.TransferService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-import group19.WebFinanceApp.service.TransferService;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -30,7 +34,6 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/transactions")
@@ -40,30 +43,86 @@ public class TransactionController {
     private final WalletRepository walletRepository;
     private final CategoryRepository categoryRepository;
     private final TransferService transferService;
+    private final JwtUtil jwtUtil;
+    private final TokenBlacklist tokenBlacklist;
 
-    public TransactionController(TransactionRepository transactionRepository,
-                                 WalletRepository walletRepository,
-                                 CategoryRepository categoryRepository,
-                                 TransferService transferService) {
+    public TransactionController(
+            TransactionRepository transactionRepository,
+            WalletRepository walletRepository,
+            CategoryRepository categoryRepository,
+            TransferService transferService,
+            JwtUtil jwtUtil,
+            TokenBlacklist tokenBlacklist
+    ) {
         this.transactionRepository = transactionRepository;
         this.walletRepository = walletRepository;
         this.categoryRepository = categoryRepository;
         this.transferService = transferService;
+        this.jwtUtil = jwtUtil;
+        this.tokenBlacklist = tokenBlacklist;
     }
 
-    // LIST
+    // helper to extract Bearer token
+    private String getBearerToken(HttpServletRequest request) {
+        String header = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (header != null && header.startsWith("Bearer ")) {
+            return header.substring(7).trim();
+        }
+        return null;
+    }
+
+    private Long getCurrentUserId(HttpServletRequest request) {
+        String token = getBearerToken(request);
+        if (token != null && jwtUtil.isValid(token) && !tokenBlacklist.isRevoked(token)) {
+            return jwtUtil.getUserId(token);
+        }
+        return null;
+    }
+
+    private String getCurrentUserRole(HttpServletRequest request) {
+        String token = getBearerToken(request);
+        if (token != null && jwtUtil.isValid(token) && !tokenBlacklist.isRevoked(token)) {
+            return jwtUtil.getRole(token);
+        }
+        return null;
+    }
+
+    // LIST (secured - user only sees their own, admin sees all)
     @GetMapping
     public List<TransactionResponse> list(
             @RequestParam(value = "walletId", required = false) Long walletId,
-            @RequestParam(value = "ownerId", required = false) Long ownerId) {
+            @RequestParam(value = "ownerId", required = false) Long ownerId,
+            HttpServletRequest request) {
+
+        Long currentUserId = getCurrentUserId(request);
+        String role = getCurrentUserRole(request);
+
+        boolean isAdmin = "ADMIN".equalsIgnoreCase(role);
 
         List<Transaction> list;
-        if (walletId != null) {
-            list = transactionRepository.findByWalletId(walletId);
-        } else if (ownerId != null) {
-            list = transactionRepository.findByWalletOwnerId(ownerId);
+        if (isAdmin) {
+            // Admin vidi sve (ili koristi poseban admin kontroler)
+            if (walletId != null) {
+                list = transactionRepository.findByWalletId(walletId);
+            } else if (ownerId != null) {
+                list = transactionRepository.findByWalletOwnerId(ownerId);
+            } else {
+                list = transactionRepository.findAll();
+            }
         } else {
-            list = transactionRepository.findAll();
+            // Običan korisnik vidi samo SVOJE transakcije
+            if (walletId != null) {
+                // Proveri da li je taj wallet zaista njegov
+                Wallet wallet = walletRepository.findById(walletId)
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Wallet not found"));
+                if (!wallet.getOwner().getId().equals(currentUserId)) {
+                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This wallet does not belong to you");
+                }
+                list = transactionRepository.findByWalletId(walletId);
+            } else {
+                // Svi njegovi walleti
+                list = transactionRepository.findByWalletOwnerId(currentUserId);
+            }
         }
         return list.stream().map(this::toResponse).toList();
     }

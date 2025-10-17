@@ -24,11 +24,11 @@ export async function getSavingsWallets(ownerId) {
 
 // CREATE
 export function createWallet(payload) {
-  // backend koristi: name, currencyCode, balance?, archived?
+  // backend koristi: name, currencyCode, balance, archived
   return api.post("/wallets", {
     name: payload.name,
     currencyCode: payload.currencyCode,
-    balance: payload.balance,
+    balance: payload.balance,       // <-- KLJUČNO: koristi balance!
     archived: payload.archived,
   });
 }
@@ -46,7 +46,6 @@ export function updateWallet(id, payload) {
 
 // ARCHIVE / RESTORE = običan PUT sa promenjenim "archived"
 export async function archiveWalletFull(id, fullWallet, archived) {
-  // očekuješ da ovde proslediš *ceo* wallet (ili bar 4 obavezna polja)
   return updateWallet(id, {
     name: fullWallet.name,
     currencyCode: fullWallet.currencyCode,

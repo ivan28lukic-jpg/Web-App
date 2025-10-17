@@ -1,7 +1,9 @@
 package group19.WebFinanceApp.controller;
 
+import group19.WebFinanceApp.controller.dto.RegisterRequest;
 import group19.WebFinanceApp.controller.dto.request.AuthRequest;
 import group19.WebFinanceApp.controller.dto.response.AuthResponse;
+import group19.WebFinanceApp.model.Role;
 import group19.WebFinanceApp.model.User;
 import group19.WebFinanceApp.repository.UserRepository;
 import group19.WebFinanceApp.security.JwtUtil;
@@ -67,5 +69,32 @@ public class AuthController {
         // ubaci token u crnu listu do isteka
         tokenBlacklist.revoke(token, exp);
         return ResponseEntity.noContent().build();
+    }
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest req) {
+        // Provera da li već postoji korisnik sa tim username-om
+        if (users.findByUsername(req.getUsername()).isPresent()) {
+            return ResponseEntity.status(409).body("Username already exists");
+        }
+        // Provera da li email već postoji
+        if (users.existsByEmail(req.getEmail())) {
+            return ResponseEntity.status(409).body("Email already exists");
+        }
+
+        // Napravi novog korisnika
+        User u = new User();
+        u.setUsername(req.getUsername());
+        u.setPasswordHash(encoder.encode(req.getPassword()));
+        u.setEmail(req.getEmail());
+        u.setFirstName(req.getFirstName());
+        u.setLastName(req.getLastName());
+        u.setBirthDate(req.getBirthDate());
+        u.setRole(Role.USER);
+        u.setBlocked(false);
+
+        users.save(u);
+
+        // Vrati neki odgovor
+        return ResponseEntity.ok("User registered");
     }
 }

@@ -21,7 +21,7 @@ export const useWalletsStore = defineStore("wallets", {
     size: 20,
     total: 0,
     currencies: [],
-    ownerId: null, // admin bira usera, user ne dira ovo
+    ownerId: null, // koristi se samo za filtriranje/admin prikaz, NE za create
   }),
 
   getters: {
@@ -106,18 +106,19 @@ export const useWalletsStore = defineStore("wallets", {
 
     async createOne(payload) {
       const toast = useToast();
-      const auth = useAuthStore();
       try {
-        // Odredi pravi ownerId
-        let ownerId = auth.user?.role === "ADMIN" && this.ownerId
-          ? this.ownerId
-          : auth.user?.id;
-
-        const balance =
-          payload.balance === "" || payload.balance == null
+        // NEMOJ slati ownerId, backend ga određuje iz tokena!
+        // OVO JE KLJUČNA IZMJENA:
+        // Ako payload ima initialBalance (iz forme), mapiraj ga u balance
+        let balance = payload.balance;
+        if (balance === undefined && payload.initialBalance !== undefined) {
+          balance = payload.initialBalance;
+        }
+        balance =
+          balance === "" || balance == null
             ? undefined
-            : Number(String(payload.balance).replace(",", "."));
-        await createWallet({ ...payload, ownerId, balance });
+            : Number(String(balance).toString().replace(",", "."));
+        await createWallet({ ...payload, balance }); // šalje balance backendu!
         await this.fetch();
         toast.success("Wallet created");
       } catch (e) {
@@ -130,10 +131,14 @@ export const useWalletsStore = defineStore("wallets", {
     async updateOne(id, payload) {
       const toast = useToast();
       try {
-        const balance =
-          payload.balance === "" || payload.balance == null
+        let balance = payload.balance;
+        if (balance === undefined && payload.initialBalance !== undefined) {
+          balance = payload.initialBalance;
+        }
+        balance =
+          balance === "" || balance == null
             ? undefined
-            : Number(String(payload.balance).replace(",", "."));
+            : Number(String(balance).toString().replace(",", "."));
         await updateWallet(id, { ...payload, balance });
         await this.fetch();
         toast.success("Wallet updated");

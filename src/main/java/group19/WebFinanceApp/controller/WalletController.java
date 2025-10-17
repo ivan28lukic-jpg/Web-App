@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 
@@ -71,28 +72,37 @@ public class WalletController {
     // CREATE
     @PostMapping
     @Transactional
-    public ResponseEntity<WalletResponse> create(@Valid @RequestBody WalletCreateRequest in) {
-        var owner = users.findById(in.getOwnerId()).orElse(null);
-        if (owner == null) return ResponseEntity.badRequest().build();
+    public ResponseEntity<WalletResponse> create(
+            @Valid @RequestBody WalletCreateRequest in,
+            Principal principal // Dodaj ovo!
+    ) {
+        // 1. Uzmi username iz tokena/sesije
+        String username = principal.getName();
 
+        // 2. Iz baze dohvati User objekat
+        var owner = users.findByUsername(username).orElse(null);
+        if (owner == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+        // 3. Validacija valute
         var code = in.getCurrencyCode() == null ? null : in.getCurrencyCode().trim();
         if (code == null || code.length() != 3) return ResponseEntity.badRequest().build();
 
         Currency cur = currencies.findByCodeIgnoreCase(code).orElse(null);
         if (cur == null) return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
 
-        // jedinstveno ime po vlasniku
+        // 4. Jedinstveno ime po vlasniku
         if (wallets.existsByOwnerIdAndNameIgnoreCase(owner.getId(), in.getName())) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
 
+        // 5. Kreiraj wallet
         Wallet w = new Wallet();
         w.setOwner(owner);
         w.setCurrency(cur);
         w.setName(in.getName());
         w.setSavings(in.isSavings());
         w.setArchived(false);
-        w.setBalance(in.getInitialBalance());
+        w.setBalance(in.getBalance());
 
         w = wallets.save(w);
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(w));

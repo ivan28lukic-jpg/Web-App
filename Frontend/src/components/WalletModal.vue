@@ -17,7 +17,7 @@
         >
           <template #left>💼</template>
         </Input>
-        lalalalalala
+        
 
         <!-- CURRENCY & BALANCE (samo kod CREATE) -->
         <div v-if="!isEdit" class="form__row form__row--2">
@@ -86,7 +86,7 @@ const loading = ref(false);
 const form = reactive({
   name: "",
   currencyCode: "",
-  balance: "",
+  balance: "", // Koristi balance svuda!
   archived: false,
 });
 
@@ -146,7 +146,7 @@ async function submit() {
         archived: form.archived,
       };
     }
-    emit("save", payload);
+    emit("save", payload); // šaljemo balance!
   } finally {
     loading.value = false;
   }

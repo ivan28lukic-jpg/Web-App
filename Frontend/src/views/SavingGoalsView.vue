@@ -6,12 +6,12 @@ import SavingGoalForm from "@/components/SavingGoalForm.vue";
 import SavingGoalTable from "@/components/SavingGoalTable.vue";
 import GoalTransferForm from "@/components/GoalTransferForm.vue";
 import SavingGoalProgressChart from "@/components/SavingGoalProgressChart.vue";
-import "@/assets/categories-look.css"; // ⬅ isti izgled kao Categories
+import "@/assets/categories-look.css";
 import { useWalletsStore } from "@/stores/storeWallets";
 import { useAuthStore } from "@/stores/auth"; // DODATO
 
 const store = useSavingGoalsStore();
-const auth = useAuthStore(); // DODATO
+const auth = useAuthStore();
 
 const q = ref("");
 watch(q, v => (store.search = v));
@@ -29,7 +29,6 @@ function openCreate() {
     alert("Odaberite korisnika pre kreiranja cilja!");
     return;
   }
-  // editGoal je null za create, ali ownerId mora biti prosleđen
   editGoal.value = null;
   showEdit.value = true;
 }
@@ -78,7 +77,7 @@ async function submitTransfer(payload) {
 
 async function openProgress(g) {
   editGoal.value = { ...g };
-  await store.loadProgress(g.id, {});
+  await store.fetchProgress(g.id, {});
   showProgress.value = true;
 }
 function closeProgress() {

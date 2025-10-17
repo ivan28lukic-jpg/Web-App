@@ -56,6 +56,7 @@ export const useSavingGoalsStore = defineStore("savingGoals", {
       try {
         const auth = useAuthStore();
         let data;
+        // ADMIN može da vidi sve ili samo jednog usera:
         if (auth.user?.role === "ADMIN" && this.ownerId) {
           // ADMIN gleda ciljeve izabranog usera
           ({ data } = await listSavingGoalsByOwner(this.ownerId, this.includeArchived));

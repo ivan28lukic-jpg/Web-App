@@ -1,22 +1,20 @@
 <template>
     <section>
       <h1>Statistika prihoda i troškova</h1>
-    <components-stats :owner-id="ownerId" />
+      <components-stats
+            :owner-id="authStore.isAdmin ? undefined : ownerId"
+             :is-admin="authStore.isAdmin"
+/>
+      />
     </section>
   </template>
   
   <script setup>
-  // Importuj komponentu (prilagodi putanju gde ti je fajl!)
   import ComponentsStats from "@/components/componentsStats.vue";
-  // Ako ti je u subfolderu: "@/components/stats/componentsStats.vue"
-  
   import { useAuthStore } from "@/stores/auth";
-    const authStore = useAuthStore();
-    const ownerId = authStore.user?.id || localStorage.getItem("ownerId");
+  const authStore = useAuthStore();
+  const ownerId = authStore.user?.id || Number(localStorage.getItem("ownerId"));
+    console.log("authStore.isAdmin:", authStore.isAdmin);
+    console.log("authStore.user?.role:", authStore.user?.role);
+    console.log("ownerId:", ownerId);
   </script>
-
-
-
-
-
-

@@ -12,7 +12,12 @@ import group19.WebFinanceApp.repository.SavingGoalRepository;
 import group19.WebFinanceApp.repository.UserRepository;
 import group19.WebFinanceApp.repository.WalletRepository;
 import group19.WebFinanceApp.service.TransferService;
+import group19.WebFinanceApp.repository.TransactionRepository;
+import group19.WebFinanceApp.security.JwtUtil;
+import group19.WebFinanceApp.security.TokenBlacklist;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,8 +25,8 @@ import group19.WebFinanceApp.controller.dto.response.SavingGoalProgressPoint;
 import group19.WebFinanceApp.controller.dto.response.SavingGoalProgressResponse;
 import group19.WebFinanceApp.model.CategoryType;
 import group19.WebFinanceApp.model.Transaction;
-import group19.WebFinanceApp.repository.TransactionRepository;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -37,17 +42,42 @@ public class SavingGoalController {
     private final WalletRepository wallets;
     private final TransferService transferService;
     private final TransactionRepository transactions;
+    private final JwtUtil jwtUtil;
+    private final TokenBlacklist tokenBlacklist;
 
-    public SavingGoalController(SavingGoalRepository goals,
-                                UserRepository users,
-                                WalletRepository wallets,
-                                TransferService transferService,
-                                TransactionRepository transactions) {
+    public SavingGoalController(
+            SavingGoalRepository goals,
+            UserRepository users,
+            WalletRepository wallets,
+            TransferService transferService,
+            TransactionRepository transactions,
+            JwtUtil jwtUtil,
+            TokenBlacklist tokenBlacklist
+    ) {
         this.goals = goals;
         this.users = users;
         this.wallets = wallets;
         this.transferService = transferService;
         this.transactions = transactions;
+        this.jwtUtil = jwtUtil;
+        this.tokenBlacklist = tokenBlacklist;
+    }
+
+    // Helper to extract Bearer token
+    private String getBearerToken(HttpServletRequest request) {
+        String header = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (header != null && header.startsWith("Bearer ")) {
+            return header.substring(7).trim();
+        }
+        return null;
+    }
+
+    private String getCurrentUserRole(HttpServletRequest request) {
+        String token = getBearerToken(request);
+        if (token != null && jwtUtil.isValid(token) && !tokenBlacklist.isRevoked(token)) {
+            return jwtUtil.getRole(token);
+        }
+        return null;
     }
 
     // LIST by owner (includeArchived=false podrazumevano)
@@ -60,9 +90,14 @@ public class SavingGoalController {
                 .toList();
     }
 
-    // ADMIN list
+    // ADMIN list - samo admin može!
     @GetMapping
-    public List<SavingGoalResponse> all(@RequestParam(defaultValue = "false") boolean includeArchived) {
+    public List<SavingGoalResponse> all(@RequestParam(defaultValue = "false") boolean includeArchived,
+                                        HttpServletRequest request) {
+        String role = getCurrentUserRole(request);
+        if (!"ADMIN".equalsIgnoreCase(role)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only admin can see all saving goals");
+        }
         return goals.findAll().stream()
                 .filter(g -> includeArchived || !g.isArchived())
                 .map(this::toResponse)

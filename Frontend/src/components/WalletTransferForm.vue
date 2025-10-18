@@ -157,16 +157,69 @@ async function onSubmit() {
 </script>
 
 <style scoped>
-.transfer-card { padding: 12px; margin-top: 1.5rem; border-radius: 8px; background: #fff; border: 1px solid #eef2f7; }
-.transfer-grid { display:flex; gap:16px; align-items:flex-start; }
-.col { flex:1; }
-.box { margin-top:8px; padding:8px; border-radius:6px; background:#fafafa; border:1px solid #f1f5f9; }
-.arrow { align-self:center; font-size:28px; color:#16a34a; padding:0 6px; }
+.transfer-card.card {
+  margin-top: 1.5rem;
+  padding: 18px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.02); /* match table card */
+  border: 1px solid rgba(255,255,255,0.04);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+}
+
+/* title consistent with other cards */
+.tc__title {
+  margin: 0 0 10px 0;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+/* layout */
+.transfer-grid { display:flex; gap:18px; align-items:flex-start; }
+.col { flex:1; min-width: 220px; }
+.arrow { align-self:center; font-size:28px; color:var(--green-300, #22c55e); padding:0 6px; }
+
+/* boxes inside columns */
+.box {
+  margin-top:10px;
+  padding:10px;
+  border-radius:8px;
+  background: rgba(0,0,0,0.12);
+  border: 1px solid rgba(255,255,255,0.03);
+}
+.box-row { margin-bottom:8px; color: var(--muted); }
+
+/* labels and small labels */
 .label { display:block; font-weight:600; margin-bottom:6px; color:var(--muted); }
-.actions { display:flex; justify-content:flex-end; gap:8px; margin-top:12px; }
-.error { margin-top:10px; color:#c53030; font-weight:600; }
-.form__control { width:100%; padding:8px; border-radius:6px; border:1px solid #e2e8f0; box-sizing:border-box; }
-.btn { padding:8px 12px; border-radius:6px; cursor:pointer; }
-.btn--primary { background:#16a34a; color:white; border:1px solid #16a34a; }
-.btn--outline { background:transparent; border:1px solid #16a34a; color:#16a34a; }
+.mini { display:block; font-size:0.85rem; color:var(--muted); margin-bottom:6px; }
+
+/* form controls styled like table inputs */
+.form__control {
+  width:100%;
+  padding:10px 12px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,0.04);
+  background: transparent;
+  color: inherit;
+  box-sizing: border-box;
+  outline: none;
+}
+.form__control:focus {
+  box-shadow: 0 0 0 3px rgba(34,197,94,0.06);
+  border-color: rgba(34,197,94,0.18);
+}
+
+/* actions aligned to the right like other cards */
+.actions { display:flex; justify-content:flex-end; gap:10px; margin-top:14px; }
+.error { margin-top:10px; color:#f87171; font-weight:600; }
+
+/* buttons consistent with site */
+.btn { padding:8px 14px; border-radius:8px; cursor:pointer; }
+.btn--primary { background:var(--green-300, #16a34a); color:white; border:1px solid var(--green-300, #16a34a); }
+.btn--outline { background:transparent; border:1px solid rgba(255,255,255,0.06); color:inherit; }
+
+/* small screens tweak */
+@media (max-width: 880px) {
+  .transfer-grid { flex-direction: column; gap:12px; }
+  .arrow { display:none; }
+}
 </style>

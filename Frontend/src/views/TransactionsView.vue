@@ -66,6 +66,19 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Transfer form (inline, ispod tabele) -->
+    <WalletTransferForm
+      v-if="!loadingTransfer"
+      :wallets="wallets.items"
+      :currencies="currencies"
+      @submit="handleTransfer"
+      @cancel="resetTransferForm"
+    />
+
+    <div v-if="loadingTransfer" style="margin-top:1rem;">Loading transfer resources…</div>
+    <div v-if="errorTransfer" style="color:red; margin-top:6px;">{{ errorTransfer }}</div>
+
   </div>
 
   <TransactionModal
@@ -95,6 +108,10 @@ import { useToast } from "@/composables/useToast";
 import TransactionModal from "@/components/TransactionModal.vue";
 import ConfirmDialog from "@/components/ConfirmDialog.vue";
 
+import WalletTransferForm from "@/components/WalletTransferForm.vue";
+import { listCurrencies } from "@/services/currenciesService";
+import { transferFunds } from "@/services/transferService";
+
 const toast = useToast();
 const wallets = useWalletsStore();
 const txs = useTransactionsStore();
@@ -119,6 +136,11 @@ const walletOpts = computed(() =>
                     .map(w => ({ value: String(w.id), label: w.name }))
       : []
 );
+
+// TRANSFER resources
+const currencies = ref([]);
+const loadingTransfer = ref(true);
+const errorTransfer = ref("");
 
 function fmt(n) {
   const v = Number(n || 0);
@@ -212,10 +234,76 @@ async function doDelete() {
   }
 }
 
+/** Resolve categories for transfer:
+ * Try to find "Transfer Out" (EXPENSE) and "Transfer In" (INCOME) in categories store.
+ * Fallback: first EXPENSE / first INCOME.
+ */
+function resolveTransferCategories() {
+  const cats = categories?.items || [];
+  const findByNameAndType = (name, type) =>
+    cats.find(c => c.name && c.name.toLowerCase() === name.toLowerCase() && String(c.type).toUpperCase() === String(type).toUpperCase());
+  const findFirstType = (type) => cats.find(c => String(c.type).toUpperCase() === String(type).toUpperCase());
+
+  const out = findByNameAndType("Transfer Out", "EXPENSE") || findFirstType("EXPENSE");
+  const infl = findByNameAndType("Transfer In", "INCOME") || findFirstType("INCOME");
+
+  return { outCategoryId: out ? Number(out.id) : null, inCategoryId: infl ? Number(infl.id) : null };
+}
+
+// HANDLER za transfer forme
+async function handleTransfer(payload) {
+  loadingTransfer.value = true;
+  errorTransfer.value = "";
+  try {
+    const { outCategoryId, inCategoryId } = resolveTransferCategories();
+    if (!outCategoryId || !inCategoryId) {
+      throw new Error("Transfer categories not configured on server. Please create Transfer Out (EXPENSE) and Transfer In (INCOME) categories.");
+    }
+
+    const body = {
+      fromWalletId: Number(payload.fromWalletId),
+      toWalletId: Number(payload.toWalletId),
+      outCategoryId,
+      inCategoryId,
+      amount: Number(String(payload.amount).replace(",", ".")),
+      description: payload.description || undefined
+    };
+
+    await transferFunds(body);
+    toast.success("Transfer successful");
+    // refresh wallets and transactions
+    await wallets.fetch({ page: 0, size: 100 });
+    await reload();
+  } catch (e) {
+    const msg = e?.response?.data?.message || e.message || "Transfer failed";
+    errorTransfer.value = msg;
+    toast.error(msg);
+  } finally {
+    loadingTransfer.value = false;
+  }
+}
+
+function resetTransferForm() {
+  // nothing heavy to do — form resets itself via its internal cancel emit
+}
+
+/** INITIAL LOAD */
 onMounted(async () => {
+  // wallets fetch for wallet selects (if empty)
   if (!wallets.items.length) await wallets.fetch({ page: 0, size: 100 });
   if (categories && !categories.items?.length) await categories.fetch?.({ page: 0, size: 200 });
   await reload();
+
+  // load currencies for conversion display
+  loadingTransfer.value = true;
+  try {
+    const { data } = await listCurrencies();
+    currencies.value = Array.isArray(data) ? data : (data?.content ?? []);
+  } catch (e) {
+    errorTransfer.value = e?.message || "Failed to load currencies";
+  } finally {
+    loadingTransfer.value = false;
+  }
 });
 </script>
 

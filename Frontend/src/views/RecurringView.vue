@@ -2,27 +2,27 @@
     <div class="container page">
       <div class="card">
         <div class="table-header-wrapper">
-          <h2>Ponavljajuće transakcije</h2>
+          <h2>Recurring transactions</h2>
           <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
-            <button class="btn btn--primary" @click="fetchTemplates" :disabled="loading">Osveži</button>
-            <button class="btn btn--primary" @click="openCreateForm">Dodaj šablon</button>
+            <button class="btn btn--primary" @click="fetchTemplates" :disabled="loading">Refresh</button>
+            <button class="btn btn--primary" @click="openCreateForm">Add template</button>
           </div>
         </div>
         <table class="wf__table" style="margin-top:12px;">
           <thead>
             <tr>
-              <th>Naziv</th>
-              <th>Novčanik</th>
-              <th>Kategorija</th>
-              <th>Iznos</th>
-              <th>Valuta</th>
-              <th>Frekvencija</th>
+              <th>Name</th>
+              <th>Wallet</th>
+              <th>Category</th>
+              <th>Amount</th>
+              <th>Currency</th>
+              <th>Frequency</th>
               <th>Interval</th>
               <th>Start</th>
-              <th>Kraj</th>
-              <th>Sledeći termin</th>
+              <th>End</th>
+              <th>Next run</th>
               <th>Status</th>
-              <th>Akcije</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -39,21 +39,21 @@
               <td>{{ tpl.nextRunDate || "—" }}</td>
               <td>
                 <span :style="{ color: tpl.active ? 'green' : 'gray' }">
-                  {{ tpl.active ? "Aktivno" : "Isključeno" }}
+                  {{ tpl.active ? "Active" : "Inactive" }}
                 </span>
               </td>
               <td class="recurring-btns-wrapper">
-                <button @click="openEditForm(tpl)" class="btn btn--sm">Izmeni</button>
+                <button @click="openEditForm(tpl)" class="btn btn--sm">Edit</button>
                 <button @click="toggleTemplate(tpl)" class="btn btn--sm">
-                  {{ tpl.active ? "Isključi" : "Aktiviraj" }}
+                  {{ tpl.active ? "Deactivate" : "Activate" }}
                 </button>
               </td>
             </tr>
             <tr v-if="!loading && !templates.length">
-              <td colspan="12" style="text-align:center; color:var(--muted);">Nema podataka.</td>
+              <td colspan="12" style="text-align:center; color:var(--muted);">No data available.</td>
             </tr>
             <tr v-if="loading">
-              <td colspan="12" style="text-align:center;">Učitavanje…</td>
+              <td colspan="12" style="text-align:center;">Loading…</td>
             </tr>
           </tbody>
         </table>

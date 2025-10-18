@@ -1,27 +1,27 @@
 <template>
     <div class="top-expenses">
-      <h2>Top 10 troškova za period</h2>
+      <h2>Top 10 expenses for period</h2>
       <form class="top-expenses-filter" @submit.prevent="reload">
         <input type="date" v-model="from" />
         <input type="date" v-model="to" />
         <select v-model="categoryId">
-          <option value="">Sve kategorije</option>
+          <option value="">All categories</option>
           <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
         </select>
-        <input type="number" v-model="minAmount" placeholder="Min iznos" />
-        <input type="number" v-model="maxAmount" placeholder="Max iznos" />
-        <button type="submit">Prikaži</button>
+        <input type="number" v-model="minAmount" placeholder="Min amount" />
+        <input type="number" v-model="maxAmount" placeholder="Max amount" />
+        <button type="submit">Show</button>
       </form>
-      <div v-if="loading" class="loading">Učitavanje...</div>
+      <div v-if="loading" class="loading">Loading...</div>
       <div v-if="error" class="error">{{ error }}</div>
       <table v-if="!loading && expenses.length">
         <thead>
           <tr>
             <th>#</th>
-            <th>Kategorija</th>
-            <th>Opis</th>
-            <th>Iznos</th>
-            <th>Datum</th>
+            <th>Category</th>
+            <th>Description</th>
+            <th>Amount</th>
+            <th>Date</th>
           </tr>
         </thead>
         <tbody>
@@ -34,7 +34,7 @@
           </tr>
         </tbody>
       </table>
-      <div v-if="!loading && !expenses.length" style="padding:1rem;">Nema troškova za izabrani period.</div>
+      <div v-if="!loading && !expenses.length" style="padding:1rem;">No expenses for the selected period.</div>
     </div>
   </template>
   

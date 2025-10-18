@@ -38,6 +38,7 @@ const routes = [
   { path: "/categories", name: "categories", component: Categories },
   { path: "/savings", name: "savings", component: Savings },
   { path: "/stats", name: "stats", component: Stats },
+  // Profile - keep route defined (UI unchanged) but guarded below
   { path: "/profile", name: "profile", component: Profile },
   { path: "/recurring", name: "recurring", component: Recurring },
 
@@ -54,13 +55,11 @@ const router = createRouter({
   routes,
 });
 
-// IMPORTANT: If your auth store exposes an async init/restore method, guard should wait for it.
-// This prevents redirecting to /wallets before auth store has user/token.
+// Global guard
 router.beforeEach(async (to, from, next) => {
   const auth = useAuthStore();
 
   // If auth store has an async initializer, call/await it once.
-  // Implement auth.initialize() as shown in the auth store example below.
   if (typeof auth.initialize === "function" && !auth.__initialized) {
     try {
       await auth.initialize(); // should set __initialized = true inside the store
@@ -82,6 +81,11 @@ router.beforeEach(async (to, from, next) => {
   // require login for non-public routes
   if (!auth.isAuthenticated) {
     return next({ name: "landing", replace: true });
+  }
+
+  // Prevent admins from accessing the Profile page (both nav & direct URL)
+  if (to.name === "profile" && auth.isAdmin) {
+    return next({ name: "admin-dashboard", replace: true });
   }
 
   // admin routes

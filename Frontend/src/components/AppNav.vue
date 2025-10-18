@@ -1,5 +1,5 @@
 <template>
-  <header class="nav-wrap">
+  <header v-if="showNav" class="nav-wrap">
     <nav class="nav container">
       <div class="left">
         <RouterLink to="/" class="brand">
@@ -37,9 +37,14 @@
           <RouterLink to="/categories">Categories</RouterLink>
           <RouterLink to="/savings">Saving Goals</RouterLink>
           <RouterLink to="/stats">Stats</RouterLink>
-          <RouterLink to="/profile">Profile</RouterLink>
-          <RouterLink v-if="auth.isAdmin" to="/admin">Admin</RouterLink>
+          <!-- Profile hidden for admins -->
+        </template>
+      </div>
 
+      <div class="actions">
+        <RouterLink v-if="!auth.isAdmin" to="/profile">Profile</RouterLink>
+        <RouterLink v-if="auth.isAdmin" to="/admin">Admin</RouterLink>
+        <template v-if="auth.isAuthenticated">
           <button class="btn btn--danger btn--sm" @click="logout">
             Logout
           </button>
@@ -50,11 +55,19 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
+import { useRoute } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 
 const auth = useAuthStore();
 const open = ref(false);
+const route = useRoute();
+
+// Hide navbar on landing ("/") and login ("/login")
+const showNav = computed(() => {
+  const name = route.name;
+  return !(name === "landing" || name === "login");
+});
 
 const logout = () => {
   auth.logout();
@@ -148,6 +161,13 @@ const logout = () => {
   background: rgba(255, 255, 255, 0.06);
 }
 
+/* right-side actions */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 /* burger (mobile) */
 .burger {
   display: none;
@@ -179,11 +199,18 @@ const logout = () => {
     display: none;
     flex-direction: column;
     min-width: 220px;
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.35);
   }
 
   .links.open {
     display: flex;
+  }
+
+  .actions {
+    position: absolute;
+    right: 16px;
+    top: 16px;
+    gap: 8px;
   }
 }
 </style>

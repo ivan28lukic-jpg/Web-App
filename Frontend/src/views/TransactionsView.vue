@@ -73,7 +73,7 @@
 
     <div v-else style="margin-top:16px;" class="card" v-if="stats.length">
       <header style="padding:12px 16px; border-bottom:1px solid rgba(255,255,255,0.04);">
-        <strong>Aggregated ({{ viewPeriodLabel }}) — displayed in {{ displayCurrencyCode }}</strong>
+        <h2>Aggregated ({{ viewPeriodLabel }}) — displayed in {{ displayCurrencyCode }}</h2>
         <span style="margin-left:12px; color:var(--muted);">Period: {{ statsFrom || '—' }} → {{ statsTo || '—' }}</span>
         <div class="aggregated-filter-wrapper">
 

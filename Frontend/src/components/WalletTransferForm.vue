@@ -1,6 +1,6 @@
 <template>
   <div class="  card">
-    <h3 style="margin:0 0 8px 0;">Transfer između novčanika</h3>
+    <h2 style="margin:0 0 8px 0;">Transfer between wallets</h2>
 
     <div class="transfer-grid">
       <div class="col">

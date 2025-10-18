@@ -304,7 +304,7 @@ select.form__control {
 .check {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
   cursor: pointer;
   user-select: none;
 }

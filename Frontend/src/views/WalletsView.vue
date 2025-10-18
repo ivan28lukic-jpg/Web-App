@@ -1,7 +1,7 @@
 <template>
   <div class="container page">
     <div class="card" style="overflow:auto;">
-      <header style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px;">
+      <header style="display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:12px;">
         <div>
           <h2 style="margin:0 0 4px 0;">Wallets</h2>
           <p class="muted" style="margin:0;">Create and manage your wallets.</p>

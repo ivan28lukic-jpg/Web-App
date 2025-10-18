@@ -98,7 +98,7 @@ onMounted(() => store.load());
         <h1 class="data-card__title">Saving Goals</h1>
         <div class="data-toolbar">
           <input v-model="q" class="data-input" placeholder="Search..." />
-          <label class="data-switch">
+          <label class="check">
             <input type="checkbox" v-model="store.includeArchived" @change="store.load()" />
             Show archived
           </label>

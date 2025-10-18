@@ -28,7 +28,9 @@
         </RouterLink>
 
         <template v-if="auth.isAuthenticated">
-          <RouterLink to="/dashboard">Dashboard</RouterLink>
+          <!-- Dashboard is now visible only for admins -->
+          <RouterLink v-if="auth.isAdmin" to="/dashboard">Dashboard</RouterLink>
+
           <RouterLink to="/wallets">Wallets</RouterLink>
           <RouterLink to="/transactions">Transactions</RouterLink>
           <RouterLink to="/recurring">Recurring Transactions</RouterLink>

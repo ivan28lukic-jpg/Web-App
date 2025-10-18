@@ -14,9 +14,10 @@ const Savings = () => import("@/views/SavingGoalsView.vue");
 const Stats = () => import("@/views/StatsView.vue");
 const Profile = () => import("@/views/ProfileView.vue");
 
-// === NOVO: Recurring Transactions ===
+// Recurring Transactions
 const Recurring = () => import("@/views/RecurringView.vue");
 
+// Admin
 const AdminDashboard = () => import("@/views/admin/AdminDashboardView.vue");
 const AdminUsers = () => import("@/views/admin/AdminUsersView.vue");
 const AdminCategories = () => import("@/views/admin/AdminCategoriesView.vue");
@@ -24,24 +25,23 @@ const AdminCurrencies = () => import("@/views/admin/AdminCurrenciesView.vue");
 const AdminMonitoring = () => import("@/views/admin/AdminMonitoringView.vue");
 
 const routes = [
-  // Public
   { path: "/", name: "landing", component: Landing, meta: { public: true } },
   { path: "/login", name: "login", component: Login, meta: { public: true } },
   { path: "/register", name: "register", component: Register, meta: { public: true } },
 
-  // User
-  { path: "/dashboard", name: "dashboard", component: Dashboard },
+  // Dashboard (ADMIN ONLY)
+  { path: "/dashboard", name: "dashboard", component: Dashboard, meta: { requiresAdmin: true } },
+
+  // Authenticated user routes
   { path: "/wallets", name: "wallets", component: Wallets },
   { path: "/transactions", name: "transactions", component: Transactions },
   { path: "/categories", name: "categories", component: Categories },
   { path: "/savings", name: "savings", component: Savings },
   { path: "/stats", name: "stats", component: Stats },
   { path: "/profile", name: "profile", component: Profile },
-
-  // === NOVO: Recurring Transactions ruta ===
   { path: "/recurring", name: "recurring", component: Recurring },
 
-  // Admin
+  // Admin routes
   { path: "/admin", name: "admin-dashboard", component: AdminDashboard, meta: { requiresAdmin: true } },
   { path: "/admin/users", name: "admin-users", component: AdminUsers, meta: { requiresAdmin: true } },
   { path: "/admin/categories", name: "admin-categories", component: AdminCategories, meta: { requiresAdmin: true } },
@@ -54,21 +54,39 @@ const router = createRouter({
   routes,
 });
 
-// Global guard
-router.beforeEach((to, from, next) => {
+// IMPORTANT: If your auth store exposes an async init/restore method, guard should wait for it.
+// This prevents redirecting to /wallets before auth store has user/token.
+router.beforeEach(async (to, from, next) => {
   const auth = useAuthStore();
+
+  // If auth store has an async initializer, call/await it once.
+  // Implement auth.initialize() as shown in the auth store example below.
+  if (typeof auth.initialize === "function" && !auth.__initialized) {
+    try {
+      await auth.initialize(); // should set __initialized = true inside the store
+    } catch (e) {
+      // initialization failed but we continue (unauthenticated state)
+      console.warn("Auth initialization failed:", e);
+    }
+  }
+
   const isPublic = to.meta?.public === true;
 
   if (isPublic) {
+    if ((to.name === "login" || to.name === "register") && auth.isAuthenticated) {
+      return next({ name: "wallets", replace: true });
+    }
     return next();
   }
 
+  // require login for non-public routes
   if (!auth.isAuthenticated) {
-    return next({ name: "landing" });
+    return next({ name: "landing", replace: true });
   }
 
+  // admin routes
   if (to.meta?.requiresAdmin && !auth.isAdmin) {
-    return next({ name: "dashboard" });
+    return next({ name: "wallets", replace: true });
   }
 
   next();

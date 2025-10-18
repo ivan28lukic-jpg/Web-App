@@ -1,5 +1,5 @@
 <template>
-  <div class="transfer-card">
+  <div class="  card">
     <h3 style="margin:0 0 8px 0;">Transfer između novčanika</h3>
 
     <div class="transfer-grid">
@@ -157,14 +157,6 @@ async function onSubmit() {
 </script>
 
 <style scoped>
-.transfer-card.card {
-  margin-top: 1.5rem;
-  padding: 18px;
-  border-radius: 10px;
-  background: rgba(255,255,255,0.02); /* match table card */
-  border: 1px solid rgba(255,255,255,0.04);
-  box-shadow: 0 2px 10px rgba(0,0,0,0.25);
-}
 
 /* title consistent with other cards */
 .tc__title {
@@ -176,7 +168,14 @@ async function onSubmit() {
 /* layout */
 .transfer-grid { display:flex; gap:18px; align-items:flex-start; }
 .col { flex:1; min-width: 220px; }
-.arrow { align-self:center; font-size:28px; color:var(--green-300, #22c55e); padding:0 6px; }
+.arrow { 
+  align-self:center;
+  font-size:28px;
+  color:var(--green-300, #22c55e);
+  padding:0 6px;
+  position: relative;
+  top: 0.75rem;
+}
 
 /* boxes inside columns */
 .box {

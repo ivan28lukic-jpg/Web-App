@@ -1,17 +1,17 @@
 <template>
     <div class="container page">
-      <h2>Podešavanja profila</h2>
-      <form class="form" @submit.prevent="submit">
+      <h2>Profile settings</h2>
+      <form class="form card" @submit.prevent="submit">
         <div class="form__row">
-          <label class="form__label">Ime</label>
+          <label class="form__label">First name</label>
           <input class="form__control" v-model="form.firstName" type="text" required maxlength="80" />
         </div>
         <div class="form__row">
-          <label class="form__label">Prezime</label>
+          <label class="form__label">Last name</label>
           <input class="form__control" v-model="form.lastName" type="text" required maxlength="80" />
         </div>
         <div class="form__row">
-          <label class="form__label">Korisničko ime</label>
+          <label class="form__label">Username</label>
           <input class="form__control" v-model="form.username" type="text" required maxlength="80" />
         </div>
         <div class="form__row">
@@ -19,19 +19,19 @@
           <input class="form__control" v-model="form.email" type="email" required maxlength="160" />
         </div>
         <div class="form__row">
-          <label class="form__label">Datum rođenja</label>
+          <label class="form__label">Birth date</label>
           <input class="form__control" v-model="form.birthDate" type="date" required />
         </div>
         <div class="form__row">
-          <label class="form__label">Avatar URL (opciono)</label>
-          <input class="form__control" v-model="form.avatarPath" type="text" maxlength="255" placeholder="npr. /avatars/user.png" />
+          <label class="form__label">Profile picture URL (optional)</label>
+          <input class="form__control" v-model="form.avatarPath" type="text" maxlength="255" placeholder="e.g. /avatars/user.png" />
         </div>
         <div class="form__row">
-          <label class="form__label">Preferirana valuta (opciono)</label>
-          <input class="form__control" v-model="form.preferredCurrencyCode" type="text" maxlength="3" placeholder="npr. EUR, USD, RSD" />
+          <label class="form__label">Preferred currency (optional)</label>
+          <input class="form__control" v-model="form.preferredCurrencyCode" type="text" maxlength="3" placeholder="e.g. EUR, USD, RSD" />
         </div>
         <div style="margin-top:18px;">
-          <button class="btn btn--primary" type="submit">Sačuvaj izmene</button>
+          <button class="btn btn--primary" type="submit">Save changes</button>
         </div>
       </form>
     </div>
@@ -81,3 +81,53 @@
     }
   }
   </script>
+
+<style scoped>
+
+.container.page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.form {
+  max-width: 480px;
+  width: 100%;
+}
+
+.form.card{
+  margin: auto;
+}
+
+.form__row {
+  display: grid;
+  gap: 1rem;
+}
+
+.form__label {
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.form__control {
+  --ctrl-bg: rgba(255, 255, 255, 0.04);
+  --ctrl-brd: rgba(255, 255, 255, 0.12);
+  --ctrl-fg: var(--txt);
+  --ctrl-ph: #9fb0a9;
+
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid var(--ctrl-brd);
+  background: var(--ctrl-bg);
+  color: var(--ctrl-fg);
+  outline: none;
+
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease;
+}
+</style>

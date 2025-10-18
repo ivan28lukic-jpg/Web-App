@@ -43,7 +43,7 @@
             <td style="text-align:left; opacity: .85;">{{ t.description || "—" }}</td>
             <td style="text-align:right; font-variant-numeric: tabular-nums;">
               <span :style="amountStyle(t)">
-                {{ fmt(t.amount) }}
+                {{ fmt(t.amount) }} {{ currencyOfTransaction(t) }}
               </span>
             </td>
             <td>
@@ -52,8 +52,7 @@
                 <button class="btn btn--danger btn--sm" @click="askDelete(t)">Delete</button>
               </div>
             </td>
-          </tr>
-
+          </tr>  
           <tr v-if="!txs.loading && txs.items.length === 0">
             <td colspan="6" style="text-align:center; padding:18px;">
               <span class="muted">No transactions.</span>
@@ -266,7 +265,11 @@ function openEdit(t) {
   current.value = { ...t };
   modalOpen.value = true;
 }
-
+function currencyOfTransaction(t) {
+  // Pronađi wallet po id-u, pa uzmi currencyCode
+  const w = wallets.items.find(x => x.id === t.walletId);
+  return w ? w.currencyCode : "";
+}
 async function onSave(payload) {
   try {
     if (current.value && current.value.id) {

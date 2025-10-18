@@ -31,6 +31,7 @@
           <RouterLink to="/dashboard">Dashboard</RouterLink>
           <RouterLink to="/wallets">Wallets</RouterLink>
           <RouterLink to="/transactions">Transactions</RouterLink>
+          <RouterLink to="/recurring">Recurring Transactions</RouterLink>
           <RouterLink to="/categories">Categories</RouterLink>
           <RouterLink to="/savings">Saving Goals</RouterLink>
           <RouterLink to="/stats">Stats</RouterLink>

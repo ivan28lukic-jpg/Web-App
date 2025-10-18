@@ -14,6 +14,9 @@ const Savings = () => import("@/views/SavingGoalsView.vue");
 const Stats = () => import("@/views/StatsView.vue");
 const Profile = () => import("@/views/ProfileView.vue");
 
+// === NOVO: Recurring Transactions ===
+const Recurring = () => import("@/views/RecurringView.vue");
+
 const AdminDashboard = () => import("@/views/admin/AdminDashboardView.vue");
 const AdminUsers = () => import("@/views/admin/AdminUsersView.vue");
 const AdminCategories = () => import("@/views/admin/AdminCategoriesView.vue");
@@ -35,6 +38,9 @@ const routes = [
   { path: "/stats", name: "stats", component: Stats },
   { path: "/profile", name: "profile", component: Profile },
 
+  // === NOVO: Recurring Transactions ruta ===
+  { path: "/recurring", name: "recurring", component: Recurring },
+
   // Admin
   { path: "/admin", name: "admin-dashboard", component: AdminDashboard, meta: { requiresAdmin: true } },
   { path: "/admin/users", name: "admin-users", component: AdminUsers, meta: { requiresAdmin: true } },
@@ -53,22 +59,18 @@ router.beforeEach((to, from, next) => {
   const auth = useAuthStore();
   const isPublic = to.meta?.public === true;
 
-  // Ako je ruta javna (public), dozvoli pristup
   if (isPublic) {
     return next();
   }
 
-  // Zaštićene rute: ako nije prijavljen, preusmeri na landing
   if (!auth.isAuthenticated) {
     return next({ name: "landing" });
   }
 
-  // Admin-only rute: ako nije admin, preusmeri na dashboard
   if (to.meta?.requiresAdmin && !auth.isAdmin) {
     return next({ name: "dashboard" });
   }
 
-  // Sve ostalo dozvoli
   next();
 });
 

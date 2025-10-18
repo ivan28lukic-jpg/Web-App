@@ -22,7 +22,14 @@ public class RecurringService {
     private final WalletRepository wallets;
     private final CategoryRepository categories;
     private final TransactionRepository transactions;
-
+    private LocalDate computeFirstFutureRunDate(RecurringTemplate t) {
+        LocalDate today = LocalDate.now();
+        LocalDate next = t.getStartDate();
+        while (next != null && next.isBefore(today)) {
+            next = nextDate(t, next);
+        }
+        return next;
+    }
     public RecurringService(RecurringTemplateRepository templates,
                             RecurringInstanceRepository instances,
                             UserRepository users,
@@ -66,8 +73,7 @@ public class RecurringService {
         t.setStartDate(in.getStartDate());
         t.setEndDate(in.getEndDate());
         t.setActive(in.getActive() == null ? true : in.getActive());
-        t.setNextRunDate(in.getStartDate());
-
+        t.setNextRunDate(computeFirstFutureRunDate(t));
         return templates.save(t);
     }
 

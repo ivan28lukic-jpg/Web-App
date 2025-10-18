@@ -358,6 +358,30 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("maxAmount") BigDecimal maxAmount,
             Pageable pageable
     );
+    @Query("""
+        select t from Transaction t
+        join t.category c
+        join t.wallet   w
+        where c.type = group19.WebFinanceApp.model.CategoryType.EXPENSE
+          and (:ownerId   is null or w.owner.id = :ownerId)
+          and (:walletId  is null or w.id = :walletId)
+          and (:categoryId is null or c.id = :categoryId)
+          and (:from     is null or t.occurredAt >= :from)
+          and (:to       is null or t.occurredAt <= :to)
+          and (:minAmount is null or t.amount >= :minAmount)
+          and (:maxAmount is null or t.amount <= :maxAmount)
+        order by t.amount desc
+    """)
+    List<Transaction> topExpenses(
+            @Param("ownerId") Long ownerId,
+            @Param("walletId") Long walletId,
+            @Param("categoryId") Long categoryId,
+            @Param("from") Instant from,
+            @Param("to") Instant to,
+            @Param("minAmount") BigDecimal minAmount,
+            @Param("maxAmount") BigDecimal maxAmount,
+            Pageable pageable
+    );
 
     // TOP po iznosu od zadatog vremena (koristi se za 30d i 2m)
     @Query("""

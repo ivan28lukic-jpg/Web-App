@@ -565,7 +565,28 @@ public class TransactionController {
         List<PeriodStatsResponse> body = rows.stream().map(this::mapPeriodRow).toList();
         return ResponseEntity.ok(body);
     }
+    @GetMapping("/stats/top-expenses")
+    public ResponseEntity<List<TransactionResponse>> topExpenses(
+            @RequestParam(required = false) Long ownerId,
+            @RequestParam(required = false) Long walletId,
+            @RequestParam(required = false, name = "from") String fromStr,
+            @RequestParam(required = false, name = "to")   String toStr,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) BigDecimal minAmount,
+            @RequestParam(required = false) BigDecimal maxAmount,
+            @RequestParam(defaultValue = "10") int limit
+    ) {
+        if (limit <= 0) limit = 10;
+        var from = parseFrom(fromStr);
+        var to   = parseTo(toStr);
 
+        Pageable topN = PageRequest.of(0, limit, Sort.by("amount").descending());
+        List<Transaction> rows = transactionRepository.topExpenses(
+                ownerId, walletId, categoryId, from, to, minAmount, maxAmount, topN);
+
+        List<TransactionResponse> body = rows.stream().map(this::toResponse).toList();
+        return ResponseEntity.ok(body);
+    }
     /* --- helperi --- */
 
     private PeriodStatsResponse mapPeriodRow(TransactionRepository.PeriodAgg r) {

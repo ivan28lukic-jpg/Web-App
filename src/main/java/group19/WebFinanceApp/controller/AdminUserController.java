@@ -1,4 +1,4 @@
-package group19.WebFinanceApp.controller.admin;
+package group19.WebFinanceApp.controller;
 
 import group19.WebFinanceApp.controller.dto.response.AdminUserResponse;
 import group19.WebFinanceApp.model.User;

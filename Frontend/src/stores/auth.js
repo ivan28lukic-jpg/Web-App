@@ -45,6 +45,7 @@ export const useAuthStore = defineStore("auth", {
       localStorage.removeItem("jwt");
       localStorage.removeItem("role");
       localStorage.removeItem("ownerId");
+      localStorage.removeItem("user");
     },
   },
 });

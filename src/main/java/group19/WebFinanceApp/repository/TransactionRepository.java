@@ -390,4 +390,34 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
            order by t.amount desc
            """)
     List<Transaction> topByAmountSince(@Param("since") Instant since, Pageable pageable);
+
+    @Query("""
+  select t from Transaction t
+  join t.category c
+  join t.wallet w
+  join w.owner u
+  where (:walletId is null or w.id = :walletId)
+    and (:ownerUsername is null or lower(u.username) = lower(:ownerUsername))
+    and (:categoryName is null or lower(c.name) = lower(:categoryName))
+    and (:categoryId is null or c.id = :categoryId)
+    and (:type is null or c.type = :type)
+    and (:from is null or t.occurredAt >= :from)
+    and (:to is null or t.occurredAt <= :to)
+    and (:minAmount is null or t.amount >= :minAmount)
+    and (:maxAmount is null or t.amount <= :maxAmount)
+    and (:q is null or lower(t.description) like lower(concat('%', :q, '%')))
+""")
+    Page<Transaction> adminSearch(
+            @Param("walletId") Long walletId,
+            @Param("ownerUsername") String ownerUsername,
+            @Param("categoryName") String categoryName,
+            @Param("categoryId") Long categoryId,
+            @Param("type") CategoryType type,
+            @Param("from") Instant from,
+            @Param("to") Instant to,
+            @Param("minAmount") BigDecimal minAmount,
+            @Param("maxAmount") BigDecimal maxAmount,
+            @Param("q") String q,
+            Pageable pageable
+    );
 }

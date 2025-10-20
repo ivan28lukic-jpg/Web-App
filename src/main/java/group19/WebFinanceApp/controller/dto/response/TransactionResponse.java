@@ -10,6 +10,9 @@ public class TransactionResponse {
     private Long id;
     private Long walletId;
 
+    private String walletName;
+    private String ownerUsername;
+
     private Long categoryId;
     private String categoryName;
     private CategoryType categoryType;
@@ -97,4 +100,11 @@ public class TransactionResponse {
 
     public Long getRecurringInstanceId() { return recurringInstanceId; }
     public void setRecurringInstanceId(Long recurringInstanceId) { this.recurringInstanceId = recurringInstanceId; }
+
+    public String getWalletName() { return walletName; }
+    public void setWalletName(String walletName) { this.walletName = walletName; }
+
+    public String getOwnerUsername() { return ownerUsername; }
+    public void setOwnerUsername(String ownerUsername) { this.ownerUsername = ownerUsername; }
+
 }

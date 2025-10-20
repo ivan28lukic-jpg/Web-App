@@ -2,9 +2,10 @@
     <div class="container page">
       <h2>Admin: Transactions</h2>
   
+      <!-- Ispravljena filter forma -->
       <form class="filters" @submit.prevent="onFilter">
-        <input v-model="store.filters.ownerId" type="number" placeholder="User ID" />
-        <input v-model="store.filters.categoryId" type="number" placeholder="Category ID" />
+        <input v-model="store.filters.ownerUsername" placeholder="Username" />
+        <input v-model="store.filters.categoryName" placeholder="Category name" />
         <input v-model="store.filters.min" type="number" step="0.01" placeholder="Min amount" />
         <input v-model="store.filters.max" type="number" step="0.01" placeholder="Max amount" />
         <input v-model="store.filters.fromDate" type="date" />
@@ -28,8 +29,8 @@
         <thead>
           <tr>
             <th>ID</th>
-            <th>User ID</th>
-            <th>Wallet</th>
+            <th>Wallet name</th>
+            <th>Owner username</th>
             <th>Category</th>
             <th>Type</th>
             <th>Amount</th>
@@ -40,10 +41,10 @@
         <tbody>
           <tr v-for="t in store.items" :key="t.id">
             <td>{{ t.id }}</td>
-            <td>{{ t.ownerId || '-' }}</td>
-            <td>{{ t.walletId }}</td>
-            <td>{{ t.categoryName }}</td>
-            <td>{{ t.categoryType }}</td>
+            <td>{{ t.walletName || "-" }}</td>
+            <td>{{ t.ownerUsername || "-" }}</td>
+            <td>{{ t.categoryName || "-" }}</td>
+            <td>{{ t.categoryType || "-" }}</td>
             <td>{{ t.amount }}</td>
             <td>{{ t.description }}</td>
             <td>{{ new Date(t.occurredAt).toLocaleString() }}</td>
@@ -60,8 +61,9 @@
   </template>
   
   <script setup>
-  import { onMounted } from "vue";
+  import { ref, onMounted } from "vue";
   import { useAdminTransactionsStore } from "@/stores/adminTransactionsStore";
+  
   const store = useAdminTransactionsStore();
   
   function onFilter() {
@@ -92,7 +94,6 @@
     store.fetchAll();
   });
   </script>
-  
   <style scoped>
   .filters {
     display: flex;

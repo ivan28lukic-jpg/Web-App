@@ -46,6 +46,7 @@ public class TransactionController {
     private final JwtUtil jwtUtil;
     private final TokenBlacklist tokenBlacklist;
 
+
     public TransactionController(
             TransactionRepository transactionRepository,
             WalletRepository walletRepository,
@@ -430,52 +431,7 @@ public class TransactionController {
         List<PeriodStatsResponse> body = rows.stream().map(this::mapPeriodRow).toList();
         return ResponseEntity.ok(body);
     }
-
-    @GetMapping(value = "/stats/weekly", params = {"categoryId", "!categoryType"})
-    public ResponseEntity<List<PeriodStatsResponse>> statsWeeklyByCategory(
-            @RequestParam(required = false) Long ownerId,
-            @RequestParam(required = false) Long walletId,
-            @RequestParam Long categoryId,
-            @RequestParam(required = false, name = "from") String fromStr,
-            @RequestParam(required = false, name = "to")   String toStr
-    ) {
-        var from = parseFrom(fromStr);
-        var to   = parseTo(toStr);
-        var rows = transactionRepository.statsWeekly(ownerId, walletId, categoryId, from, to);
-        List<PeriodStatsResponse> body = rows.stream().map(this::mapPeriodRow).toList();
-        return ResponseEntity.ok(body);
-    }
-
-    @GetMapping(value = "/stats/weekly", params = {"!categoryId", "!categoryType"})
-    public ResponseEntity<List<PeriodStatsResponse>> statsWeeklyNoFilter(
-            @RequestParam(required = false) Long ownerId,
-            @RequestParam(required = false) Long walletId,
-            @RequestParam(required = false, name = "from") String fromStr,
-            @RequestParam(required = false, name = "to")   String toStr
-    ) {
-        var from = parseFrom(fromStr);
-        var to   = parseTo(toStr);
-        var rows = transactionRepository.statsWeekly(walletId, ownerId, (CategoryType) null, from, to);
-        List<PeriodStatsResponse> body = rows.stream().map(this::mapPeriodRow).toList();
-        return ResponseEntity.ok(body);
-    }
-
     // ---------- MONTHLY ----------
-    @GetMapping(value = "/stats/monthly", params = {"categoryType", "!categoryId"})
-    public ResponseEntity<List<PeriodStatsResponse>> statsMonthlyByType(
-            @RequestParam(required = false) Long walletId,
-            @RequestParam(required = false) Long ownerId,
-            @RequestParam CategoryType categoryType,
-            @RequestParam(required = false, name = "from") String fromStr,
-            @RequestParam(required = false, name = "to")   String toStr
-    ) {
-        var from = parseFrom(fromStr);
-        var to   = parseTo(toStr);
-        var rows = transactionRepository.statsMonthly(walletId, ownerId, categoryType, from, to);
-        List<PeriodStatsResponse> body = rows.stream().map(this::mapPeriodRow).toList();
-        return ResponseEntity.ok(body);
-    }
-
     @GetMapping(value = "/stats/monthly", params = {"categoryId", "!categoryType"})
     public ResponseEntity<List<PeriodStatsResponse>> statsMonthlyByCategory(
             @RequestParam(required = false) Long ownerId,
@@ -487,20 +443,6 @@ public class TransactionController {
         var from = parseFrom(fromStr);
         var to   = parseTo(toStr);
         var rows = transactionRepository.statsMonthly(ownerId, walletId, categoryId, from, to);
-        List<PeriodStatsResponse> body = rows.stream().map(this::mapPeriodRow).toList();
-        return ResponseEntity.ok(body);
-    }
-
-    @GetMapping(value = "/stats/monthly", params = {"!categoryType", "!categoryId"})
-    public ResponseEntity<List<PeriodStatsResponse>> statsMonthlyNoFilter(
-            @RequestParam(required = false) Long walletId,
-            @RequestParam(required = false) Long ownerId,
-            @RequestParam(required = false, name = "from") String fromStr,
-            @RequestParam(required = false, name = "to")   String toStr
-    ) {
-        var from = parseFrom(fromStr);
-        var to   = parseTo(toStr);
-        var rows = transactionRepository.statsMonthly(walletId, ownerId, (CategoryType) null, from, to);
         List<PeriodStatsResponse> body = rows.stream().map(this::mapPeriodRow).toList();
         return ResponseEntity.ok(body);
     }
@@ -537,34 +479,6 @@ public class TransactionController {
         return ResponseEntity.ok(body);
     }
 
-    @GetMapping(value = "/stats/yearly", params = {"categoryId", "!categoryType"})
-    public ResponseEntity<List<PeriodStatsResponse>> statsYearlyByCategory(
-            @RequestParam(required = false) Long ownerId,
-            @RequestParam(required = false) Long walletId,
-            @RequestParam Long categoryId,
-            @RequestParam(required = false, name = "from") String fromStr,
-            @RequestParam(required = false, name = "to")   String toStr
-    ) {
-        var from = parseFrom(fromStr);
-        var to   = parseTo(toStr);
-        var rows = transactionRepository.statsYearly(ownerId, walletId, categoryId, from, to);
-        List<PeriodStatsResponse> body = rows.stream().map(this::mapPeriodRow).toList();
-        return ResponseEntity.ok(body);
-    }
-
-    @GetMapping(value = "/stats/yearly", params = {"!categoryId", "!categoryType"})
-    public ResponseEntity<List<PeriodStatsResponse>> statsYearlyNoFilter(
-            @RequestParam(required = false) Long ownerId,
-            @RequestParam(required = false) Long walletId,
-            @RequestParam(required = false, name = "from") String fromStr,
-            @RequestParam(required = false, name = "to")   String toStr
-    ) {
-        var from = parseFrom(fromStr);
-        var to   = parseTo(toStr);
-        var rows = transactionRepository.statsYearly(walletId, ownerId, (CategoryType) null, from, to);
-        List<PeriodStatsResponse> body = rows.stream().map(this::mapPeriodRow).toList();
-        return ResponseEntity.ok(body);
-    }
     @GetMapping("/stats/top-expenses")
     public ResponseEntity<List<TransactionResponse>> topExpenses(
             @RequestParam(required = false) Long ownerId,

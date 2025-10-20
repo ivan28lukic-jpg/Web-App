@@ -1,4 +1,4 @@
-package group19.WebFinanceApp.controller;
+package group19.WebFinanceApp.controller.admin;
 
 import group19.WebFinanceApp.controller.dto.response.TransactionResponse;
 import group19.WebFinanceApp.model.CategoryType;
@@ -25,31 +25,19 @@ public class AdminTransactionsController {
         this.transactions = transactions;
     }
 
-    /**
-     * Monitoring svih transakcija u sistemu (admin).
-     *
-     * Datumski filteri – možeš koristiti:
-     *  - 'from' / 'to' kao ISO Instant (npr. 2025-09-01T00:00:00Z), ili
-     *  - 'fromDate' / 'toDate' kao YYYY-MM-DD (npr. 2025-09-01). Ako su ovi zadati,
-     *    imaju prednost i automatski se prevode na ceo dan u UTC.
-     */
-    @GetMapping
-    public Page<TransactionResponse> list(
-            @RequestParam(required = false) Long ownerId,
+    @GetMapping("/search")
+    public Page<TransactionResponse> adminSearch(
             @RequestParam(required = false) Long walletId,
+            @RequestParam(required = false) String ownerUsername,
+            @RequestParam(required = false) String categoryName,
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) CategoryType categoryType,
-
-            // stari način (ostaje podržan)
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to,
-
-            // NOVO: čisti datum
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
-
-            @RequestParam(required = false) BigDecimal min,
-            @RequestParam(required = false) BigDecimal max,
+            @RequestParam(required = false) BigDecimal minAmount,
+            @RequestParam(required = false) BigDecimal maxAmount,
             @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
@@ -57,32 +45,29 @@ public class AdminTransactionsController {
     ) {
         Pageable pageable = PageRequest.of(page, size, parseSort(sort));
 
-        // ako su zadati fromDate/toDate, imaju prednost nad from/to
         Instant effFrom = (fromDate != null)
                 ? fromDate.atStartOfDay(ZoneOffset.UTC).toInstant()
                 : from;
-
         Instant effTo = (toDate != null)
-                ? toDate.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant().minusNanos(1) // inclusive kraj dana
+                ? toDate.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant().minusNanos(1)
                 : to;
 
-        Page<Transaction> result = transactions.search(
+        Page<Transaction> result = transactions.adminSearch(
                 walletId,
-                ownerId,
+                ownerUsername,
+                categoryName,
                 categoryId,
                 categoryType,
                 effFrom,
                 effTo,
-                min,
-                max,
+                minAmount,
+                maxAmount,
                 q,
                 pageable
         );
 
         return result.map(this::toResponse);
     }
-
-    // --- helpers ---
 
     private Sort parseSort(String sort) {
         try {
@@ -103,18 +88,20 @@ public class AdminTransactionsController {
     }
 
     private TransactionResponse toResponse(Transaction t) {
-        return new TransactionResponse(
-                t.getId(),
-                t.getWallet().getId(),
-                (t.getCategory() != null ? t.getCategory().getId() : null),
-                (t.getCategory() != null ? t.getCategory().getName() : null),
-                (t.getCategory() != null ? t.getCategory().getType() : null),
-                t.getAmount(),
-                t.getDescription(),
-                t.getOccurredAt(),
-                t.getTransferId(),
-                (t.getRecurringTemplate() != null ? t.getRecurringTemplate().getId() : null),
-                (t.getRecurringInstance() != null ? t.getRecurringInstance().getId() : null)
-        );
+        TransactionResponse r = new TransactionResponse();
+        r.setId(t.getId());
+        r.setWalletId(t.getWallet().getId());
+        r.setWalletName(t.getWallet().getName());
+        r.setOwnerUsername(t.getWallet().getOwner() != null ? t.getWallet().getOwner().getUsername() : null);
+        r.setCategoryId(t.getCategory() != null ? t.getCategory().getId() : null);
+        r.setCategoryName(t.getCategory() != null ? t.getCategory().getName() : null);
+        r.setCategoryType(t.getCategory() != null ? t.getCategory().getType() : null);
+        r.setAmount(t.getAmount());
+        r.setDescription(t.getDescription());
+        r.setOccurredAt(t.getOccurredAt());
+        r.setTransferId(t.getTransferId());
+        r.setRecurringTemplateId(t.getRecurringTemplate() != null ? t.getRecurringTemplate().getId() : null);
+        r.setRecurringInstanceId(t.getRecurringInstance() != null ? t.getRecurringInstance().getId() : null);
+        return r;
     }
 }

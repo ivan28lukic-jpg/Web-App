@@ -38,21 +38,31 @@
             </td>
             <td>
               <div class="wf__actions">
-                <template v-if="!isGlobal(c)">
+                <!-- Ako je admin: uvek može Edit/Delete -->
+                <template v-if="isAdmin">
+                  <button class="btn btn--secondary btn--sm" @click="openEdit(c)">Edit</button>
+                  <button class="btn btn--danger btn--sm" @click="askDelete(c)">Delete</button>
+                </template>
+                <!-- Ako NIJE admin -->
+                <template v-else>
+                  <!-- Ako je moja: mogu Edit/Delete -->
+                  <template v-if="!isGlobal(c)">
                     <button class="btn btn--secondary btn--sm" @click="openEdit(c)">Edit</button>
                     <button class="btn btn--danger btn--sm" @click="askDelete(c)">Delete</button>
-                </template>
-                <template v-else>
+                  </template>
+                  <!-- Ako je globalna: mogu samo Use -->
+                  <template v-else>
                     <button
-                    class="btn btn--outline btn--sm"
-                    @click="copyFromGlobal(c)"
-                    :disabled="alreadyCopied(c)"
-                    :title="alreadyCopied(c) ? 'You already have this category' : 'Add to my categories'"
+                      class="btn btn--outline btn--sm"
+                      @click="copyFromGlobal(c)"
+                      :disabled="alreadyCopied(c)"
+                      :title="alreadyCopied(c) ? 'You already have this category' : 'Add to my categories'"
                     >
-                    Use
+                      Use
                     </button>
+                  </template>
                 </template>
-                </div>
+              </div>
             </td>
           </tr>
 
@@ -90,7 +100,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, computed} from "vue";  //watch sluzi za filtriranje dok kucamo
+import { ref, onMounted, watch, computed} from "vue";
 import { useCategoriesStore } from "@/stores/storeCategories";
 import CategoryModal from "@/components/CategoryModal.vue";
 import ConfirmDialog from "@/components/ConfirmDialog.vue";
@@ -100,7 +110,7 @@ import { useAuthStore } from "@/stores/auth";
 const toast = useToast();
 const cats = useCategoriesStore();
 const auth = useAuthStore();
-
+const isAdmin = computed(() => auth.user?.role === "ADMIN");
 const modalOpen = ref(false);
 const current = ref(null);
 const confirmOpen = ref(false);
@@ -108,40 +118,29 @@ const confirmMessage = ref("");
 let toDeleteId = null;
 
 const filters = cats.filters;
-
 const userId = computed(() => auth?.user?.id ?? null);
 
-// globalna je i ako nema ownerId uopšte
-// ako backend ne šalje ownerId, globalne najčešće imaju flag ili nemaju ownerId
 const isGlobal = (c) =>
   c?.predefined === true || c?.isGlobal === true || c?.system === true || c?.ownerId == null;
 
-
- const isMine = (c) => {
+const isMine = (c) => {
   if (userId.value == null) return false;
   const owners = [c?.ownerId, c?.userId, c?.createdBy];
   return owners.some(v => Number(v) === Number(userId.value));
 };
 
- // --- lokalni prikaz (bez zavisnosti od server-side filtera) ---
 const rows = computed(() => {
   const q = (filters.search || "").trim().toLowerCase();
-  const type = (filters.type || "").toUpperCase(); // '', INCOME, EXPENSE
-
+  const type = (filters.type || "").toUpperCase();
   return (cats.items || []).filter((c) => {
     const byType = !type || String(c.type).toUpperCase() === type;
     const byName = !q || String(c.name || "").toLowerCase().includes(q);
-
-    // Ako userId nije poznat (npr. auth store još nije setovan),
-    // NE ograničavaj po vlasništvu – prikaži sve što je stiglo.
     const visibleByOwner =
       userId.value == null ? true : isMine(c) || isGlobal(c);
-
     return byType && byName && visibleByOwner;
   });
 });
 
-// --- debounce helper (300ms) ---
 let typingTimer;
 function debounceReload(delay = 300) {
   clearTimeout(typingTimer);
@@ -149,14 +148,10 @@ function debounceReload(delay = 300) {
     cats.fetch({ page: 0 });
   }, delay);
 }
-
-// kada menjamo tekst -> automatski refetch sa debounce
 watch(
   () => filters.search,
   () => debounceReload(300)
 );
-
-// kada promeni tip, odmah refetch
 watch(
   () => filters.type,
   () => cats.fetch({ page: 0 })
@@ -205,29 +200,36 @@ function openEdit(c) {
 }
 
 async function onSave(payload) {
-    try {
-        // Uvek dodaj ownerId za korisničke kategorije
-        const fullPayload = { ...payload, ownerId: userId.value };
-
-        if (current.value && current.value.id) {
-            if (!isMine(current.value)) {
-                toast.warning("Predefined categories cannot be edited. Create a personal copy instead.");
-                return;
-            }
-            await cats.updateOne(current.value.id, fullPayload);
-        } else {
-            await cats.createOne(fullPayload);
-        }
-        await reload();
-        modalOpen.value = false;
-        current.value = null;
-    } catch (e) {
-        toast.error(e?.response?.data?.message || "Operation failed");
+  try {
+    let fullPayload;
+    if (isAdmin.value) {
+      // Admin pravi globalnu kategoriju (bez ownerId, sa flagom ako treba)
+      fullPayload = { ...payload, ownerId: null, predefined: true };
+    } else {
+      // Korisnik pravi svoju kategoriju
+      fullPayload = { ...payload, ownerId: userId.value };
     }
+
+    if (current.value && current.value.id) {
+      // Editovanje: Admin može sve, korisnik može samo svoje
+      if (!isMine(current.value) && !isAdmin.value) {
+        toast.warning("Predefined categories cannot be edited. Create a personal copy instead.");
+        return;
+      }
+      await cats.updateOne(current.value.id, fullPayload);
+    } else {
+      await cats.createOne(fullPayload);
+    }
+    await reload();
+    modalOpen.value = false;
+    current.value = null;
+  } catch (e) {
+    toast.error(e?.response?.data?.message || "Operation failed");
+  }
 }
 
 function askDelete(c) {
-    if (!isMine(c)) {
+    if (!isMine(c) && !isAdmin.value) {
         toast.warning("Predefined categories cannot be deleted.");
         return;
     }

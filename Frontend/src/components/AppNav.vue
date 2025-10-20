@@ -30,6 +30,7 @@
         <template v-if="auth.isAuthenticated">
           <!-- Dashboard is now visible only for admins -->
           <RouterLink v-if="auth.isAdmin" to="/dashboard">Dashboard</RouterLink>
+          <RouterLink v-if="auth.isAdmin" to="/admin/users">Admin Users</RouterLink>
 
           <RouterLink to="/wallets">Wallets</RouterLink>
           <RouterLink to="/transactions">Transactions</RouterLink>

@@ -31,6 +31,7 @@
           <!-- Dashboard is now visible only for admins -->
           <RouterLink v-if="auth.isAdmin" to="/dashboard">Dashboard</RouterLink>
           <RouterLink v-if="auth.isAdmin" to="/admin/users">Admin Users</RouterLink>
+          <RouterLink v-if="auth.isAdmin" to="/admin/currencies">Admin Currencies</RouterLink>
 
           <RouterLink to="/wallets">Wallets</RouterLink>
           <RouterLink to="/transactions">Transactions</RouterLink>

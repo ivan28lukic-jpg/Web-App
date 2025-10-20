@@ -103,6 +103,14 @@ public class AdminCurrencyController {
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        if (!currencies.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        currencies.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
 
     // ---- helpers ----
     private AdminCurrencyResponse toResponse(Currency c) {

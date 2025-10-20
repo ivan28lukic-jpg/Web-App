@@ -28,21 +28,22 @@
         </RouterLink>
 
         <template v-if="auth.isAuthenticated">
-          <!-- Dashboard is now visible only for admins -->
-          <RouterLink v-if="auth.isAdmin" to="/dashboard">Dashboard</RouterLink>
-          <RouterLink v-if="auth.isAdmin" to="/admin/users">Admin Users</RouterLink>
-          <RouterLink v-if="auth.isAdmin" to="/admin/currencies">Admin Currencies</RouterLink>
-          <RouterLink v-if="auth.isAdmin" to="/admin/monitoring">Transactions Admin</RouterLink>
+      <!-- Admin links -->
+      <RouterLink v-if="auth.isAdmin" to="/dashboard">Dashboard</RouterLink>
+      <RouterLink v-if="auth.isAdmin" to="/admin/users">Admin Users</RouterLink>
+      <RouterLink v-if="auth.isAdmin" to="/admin/currencies">Admin Currencies</RouterLink>
+      <RouterLink v-if="auth.isAdmin" to="/admin/monitoring">Transactions Admin</RouterLink>
 
+      <!-- Links prikazani za OBA tipa korisnika -->
+      <RouterLink to="/transactions">Transactions</RouterLink>
+      <RouterLink to="/categories">Categories</RouterLink>
+      <RouterLink to="/stats">Stats</RouterLink>
 
-          <RouterLink to="/wallets">Wallets</RouterLink>
-          <RouterLink to="/transactions">Transactions</RouterLink>
-          <RouterLink to="/recurring">Recurring Transactions</RouterLink>
-          <RouterLink to="/categories">Categories</RouterLink>
-          <RouterLink to="/savings">Saving Goals</RouterLink>
-          <RouterLink to="/stats">Stats</RouterLink>
-          <!-- Profile hidden for admins -->
-        </template>
+      <!-- User-only links -->
+      <RouterLink v-if="!auth.isAdmin" to="/wallets">Wallets</RouterLink>
+      <RouterLink v-if="!auth.isAdmin" to="/recurring">Recurring Transactions</RouterLink>
+      <RouterLink v-if="!auth.isAdmin" to="/savings">Saving Goals</RouterLink>
+    </template>
       </div>
 
       <div class="actions">

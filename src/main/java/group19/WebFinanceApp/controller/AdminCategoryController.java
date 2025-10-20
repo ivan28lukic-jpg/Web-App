@@ -104,7 +104,19 @@ public class AdminCategoryController {
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
-
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Object> delete(@PathVariable Long id) {
+        return categories.findById(id)
+                .map(c -> {
+                    if (c.getOwner() != null) {
+                        // Samo globalne (admin) kategorije sme admin da briše ovde!
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+                    }
+                    categories.deleteById(id);
+                    return ResponseEntity.noContent().build();
+                })
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
     // --- helpers ---
 
     private Sort parseSort(String sort) {

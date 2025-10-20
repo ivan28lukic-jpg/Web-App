@@ -111,6 +111,8 @@ const toast = useToast();
 const cats = useCategoriesStore();
 const auth = useAuthStore();
 const isAdmin = computed(() => auth.user?.role === "ADMIN");
+cats.setAdminMode(isAdmin.value); // postavi admin mod u store
+
 const modalOpen = ref(false);
 const current = ref(null);
 const confirmOpen = ref(false);
@@ -156,6 +158,10 @@ watch(
   () => filters.type,
   () => cats.fetch({ page: 0 })
 );
+watch(
+  () => isAdmin.value,
+  () => cats.setAdminMode(isAdmin.value)
+);
 
 function typeStyle(t) {
   const isIncome = String(t).toUpperCase() === "INCOME";
@@ -200,37 +206,49 @@ function openEdit(c) {
 }
 
 async function onSave(payload) {
-  try {
-    let fullPayload;
-    if (isAdmin.value) {
-      // Admin pravi globalnu kategoriju (bez ownerId, sa flagom ako treba)
-      fullPayload = { ...payload, ownerId: null, predefined: true };
-    } else {
-      // Korisnik pravi svoju kategoriju
-      fullPayload = { ...payload, ownerId: userId.value };
+    try {
+        let fullPayload;
+        if (isAdmin.value) {
+            fullPayload = {
+                name: payload.name,
+                type: String(payload.type).toUpperCase(),
+                color: payload.color || undefined
+                // NE dodaj ownerId!
+            };
+        } else {
+            fullPayload = {
+                name: payload.name,
+                type: String(payload.type).toUpperCase(),
+                ownerId: userId.value,
+                color: payload.color || undefined
+            };
+        }
+        if (current.value && current.value.id) {
+            if (!isMine(current.value) && !isAdmin.value) {
+                toast.warning("Predefined categories cannot be edited. Create a personal copy instead.");
+                return;
+            }
+            await cats.updateOne(current.value.id, fullPayload, isAdmin.value);
+        } else {
+            await cats.createOne(fullPayload, isAdmin.value);
+        }
+        await reload();
+        modalOpen.value = false;
+        current.value = null;
+    } catch (e) {
+        toast.error(e?.response?.data?.message || "Operation failed");
     }
-
-    if (current.value && current.value.id) {
-      // Editovanje: Admin može sve, korisnik može samo svoje
-      if (!isMine(current.value) && !isAdmin.value) {
-        toast.warning("Predefined categories cannot be edited. Create a personal copy instead.");
-        return;
-      }
-      await cats.updateOne(current.value.id, fullPayload);
-    } else {
-      await cats.createOne(fullPayload);
-    }
-    await reload();
-    modalOpen.value = false;
-    current.value = null;
-  } catch (e) {
-    toast.error(e?.response?.data?.message || "Operation failed");
-  }
 }
 
 function askDelete(c) {
-    if (!isMine(c) && !isAdmin.value) {
-        toast.warning("Predefined categories cannot be deleted.");
+    // Samo admin može da briše predefinisane
+    if (isGlobal(c) && !isAdmin.value) {
+        toast.warning("Only admin can delete predefined categories.");
+        return;
+    }
+    // Običan korisnik može da briše samo svoje
+    if (!isMine(c) && !isGlobal(c)) {
+        toast.warning("You can only delete your own categories.");
         return;
     }
     toDeleteId = c.id;
@@ -241,7 +259,7 @@ function askDelete(c) {
 async function doDelete() {
   if (!toDeleteId) return;
   try {
-    await cats.removeOne(toDeleteId);
+    await cats.removeOne(toDeleteId, isAdmin.value);
     await reload();
   } catch (e) {
     toast.error(e?.response?.data?.message || "Delete failed");

@@ -92,7 +92,7 @@ router.beforeEach(async (to, from, next) => {
   if (to.meta?.requiresAdmin && !auth.isAdmin) {
     return next({ name: "wallets", replace: true });
   }
-
+  
   next();
 });
 

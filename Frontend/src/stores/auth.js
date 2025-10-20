@@ -6,6 +6,8 @@ export const useAuthStore = defineStore("auth", {
     token: localStorage.getItem("jwt") || null,
     role: localStorage.getItem("role") || null,
     user: null,
+    userId: localStorage.getItem("ownerId") || null,
+    __initialized: false,
   }),
   getters: {
     isAuthenticated: (s) => !!s.token,
@@ -22,14 +24,13 @@ export const useAuthStore = defineStore("auth", {
 
       if (data.userId != null) {
         localStorage.setItem("ownerId", String(data.userId));
+        this.userId = String(data.userId);
       }
 
-      // Dodaj ovo:
       await this.fetchMe();
     },
 
     async fetchMe() {
-      // Podesi pravi endpoint po svom backendu!
       try {
         const { data } = await api.get("/users/me"); // ili /auth/me
         this.user = data;
@@ -38,10 +39,22 @@ export const useAuthStore = defineStore("auth", {
       }
     },
 
+    // DODAJ OVO:
+    async initialize() {
+      this.token = localStorage.getItem("jwt");
+      this.role = localStorage.getItem("role");
+      this.userId = localStorage.getItem("ownerId");
+      this.__initialized = true;
+      if (this.token) {
+        await this.fetchMe();
+      }
+    },
+
     logout() {
       this.token = null;
       this.role = null;
       this.user = null;
+      this.userId = null;
       localStorage.removeItem("jwt");
       localStorage.removeItem("role");
       localStorage.removeItem("ownerId");

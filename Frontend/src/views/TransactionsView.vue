@@ -39,7 +39,7 @@
           <tr v-for="t in txs.items" :key="t.id">
             <td style="text-align:left;">{{ dateOf(t) }}</td>
             <td style="text-align:left;">{{ walletName(t.walletId) }}</td>
-            <td style="text-align:left;">{{ categoryName(t.categoryId) }}</td>
+            <td style="text-align:left;">{{ t.categoryName }}</td>
             <td style="text-align:left; opacity: .85;">{{ t.description || "—" }}</td>
             <td style="text-align:right; font-variant-numeric: tabular-nums;">
               <span :style="amountStyle(t)">

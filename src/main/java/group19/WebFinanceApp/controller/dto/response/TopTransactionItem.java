@@ -7,8 +7,8 @@ import java.time.Instant;
 
 public class TopTransactionItem {
     private Long id;
-    private Long ownerId;
-    private Long walletId;
+    private String ownerUsername;
+    private String walletName;
 
     private Long categoryId;
     private String categoryName;
@@ -18,12 +18,12 @@ public class TopTransactionItem {
     private String description;
     private Instant occurredAt;
 
-    public TopTransactionItem(Long id, Long ownerId, Long walletId,
+    public TopTransactionItem(Long id, String ownerUsername, String walletName,
                               Long categoryId, String categoryName, CategoryType categoryType,
                               BigDecimal amount, String description, Instant occurredAt) {
         this.id = id;
-        this.ownerId = ownerId;
-        this.walletId = walletId;
+        this.ownerUsername = ownerUsername;
+        this.walletName = walletName;
         this.categoryId = categoryId;
         this.categoryName = categoryName;
         this.categoryType = categoryType;
@@ -33,8 +33,8 @@ public class TopTransactionItem {
     }
 
     public Long getId() { return id; }
-    public Long getOwnerId() { return ownerId; }
-    public Long getWalletId() { return walletId; }
+    public String getOwnerUsername() { return ownerUsername; }
+    public String getWalletName() { return walletName; }
     public Long getCategoryId() { return categoryId; }
     public String getCategoryName() { return categoryName; }
     public CategoryType getCategoryType() { return categoryType; }

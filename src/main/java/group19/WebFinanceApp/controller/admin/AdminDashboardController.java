@@ -25,6 +25,7 @@ public class AdminDashboardController {
     private final WalletRepository wallets;
     private final TransactionRepository transactions;
 
+
     public AdminDashboardController(UserRepository users,
                                     WalletRepository wallets,
                                     TransactionRepository transactions) {
@@ -67,14 +68,14 @@ public class AdminDashboardController {
     }
 
     private TopTransactionItem toTopItem(Transaction t) {
-        Long ownerId = t.getWallet() != null && t.getWallet().getOwner() != null
-                ? t.getWallet().getOwner().getId()
+        String ownerUsername = t.getWallet() != null && t.getWallet().getOwner() != null
+                ? t.getWallet().getOwner().getUsername()
                 : null;
-
+        String walletName = t.getWallet() != null ? t.getWallet().getName() : null;
         return new TopTransactionItem(
                 t.getId(),
-                ownerId,
-                t.getWallet() != null ? t.getWallet().getId() : null,
+                ownerUsername,
+                walletName,
                 t.getCategory() != null ? t.getCategory().getId() : null,
                 t.getCategory() != null ? t.getCategory().getName() : null,
                 t.getCategory() != null ? t.getCategory().getType() : null,

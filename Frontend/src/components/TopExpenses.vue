@@ -51,8 +51,8 @@
   const from = ref(new Date(new Date().getFullYear(), 0, 1).toISOString().slice(0, 10));
   const to = ref(new Date().toISOString().slice(0, 10));
   const categoryId = ref("");
-  const minAmount = ref("");
-  const maxAmount = ref("");
+  const min = ref("");
+  const max = ref("");
   const expenses = ref([]);
   const loading = ref(false);
   const error = ref("");
@@ -68,8 +68,8 @@
         from: from.value,
         to: to.value,
         categoryId: categoryId.value || undefined,
-        minAmount: minAmount.value || undefined,
-        maxAmount: maxAmount.value || undefined,
+        min: min.value || undefined,
+        max: max.value || undefined,
         limit: 10,
       });
       expenses.value = data;

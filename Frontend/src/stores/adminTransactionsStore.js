@@ -9,8 +9,8 @@ export const useAdminTransactionsStore = defineStore("adminTransactions", {
     filters: {
       ownerId: "",
       categoryId: "",
-      min: "",
-      max: "",
+      minAmount: "",
+      maxAmount: "",
       fromDate: "",
       toDate: "",
       sort: "occurredAt,DESC",
@@ -40,8 +40,8 @@ export const useAdminTransactionsStore = defineStore("adminTransactions", {
       this.filters = {
         ownerId: "",
         categoryId: "",
-        min: "",
-        max: "",
+        minAmount: "",
+        maxAmount: "",
         fromDate: "",
         toDate: "",
         sort: "occurredAt,DESC",

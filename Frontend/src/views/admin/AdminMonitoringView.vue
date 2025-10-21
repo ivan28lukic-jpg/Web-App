@@ -6,8 +6,8 @@
       <form class="filters" @submit.prevent="onFilter">
         <input v-model="store.filters.ownerUsername" placeholder="Username" />
         <input v-model="store.filters.categoryName" placeholder="Category name" />
-        <input v-model="store.filters.min" type="number" step="0.01" placeholder="Min amount" />
-        <input v-model="store.filters.max" type="number" step="0.01" placeholder="Max amount" />
+        <input v-model="store.filters.minAmount" type="number" step="0.01" placeholder="Min amount" />
+        <input v-model="store.filters.maxAmount" type="number" step="0.01" placeholder="Max amount" />
         <input v-model="store.filters.fromDate" type="date" />
         <input v-model="store.filters.toDate" type="date" />
         <select v-model="store.filters.sort">

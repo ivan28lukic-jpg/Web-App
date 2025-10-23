@@ -114,7 +114,7 @@ function openAddNote(user) {
 }
 
 function onNoteSaved() {
-  console.log('Note saved for user', selectedUser.value?.id);
+  // Note saved successfully
 }
 
 onMounted(() => {

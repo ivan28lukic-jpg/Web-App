@@ -40,7 +40,6 @@ const chart = ref(null);
 const chartEl = ref();
 
 async function reload() {
-    console.log("isAdmin:", props.isAdmin, "ownerId:", props.ownerId);
   loading.value = true;
   error.value = "";
   try {

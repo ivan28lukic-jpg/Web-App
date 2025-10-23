@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 
@@ -19,9 +20,11 @@ import java.util.List;
 public class UserController {
 
     private final UserRepository users;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserController(UserRepository users) {
+    public UserController(UserRepository users, PasswordEncoder passwordEncoder) {
         this.users = users;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @GetMapping("/count")
@@ -52,7 +55,7 @@ public class UserController {
         u.setUsername(in.getUsername());
         u.setBirthDate(in.getBirthDate());
         u.setEmail(in.getEmail());
-        u.setPasswordHash(in.getPassword());  // TODO: hash
+        u.setPasswordHash(passwordEncoder.encode(in.getPassword()));
         u.setRole(Role.USER);
         u.setBlocked(false);
 
